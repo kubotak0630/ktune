@@ -12,14 +12,18 @@ extern int g_debug;
 GtkWidget *window;
 
 
+//static GtkWidget *g_vbox;
+static GtkCellRenderer *g_renderer = NULL;  //コンボボックスの表示で使う
+static GtkWidget *g_notebook;
+
 extern VALUE eval_expression(Expression* expr);
 extern VALUE* search_relative_reg_from_list(char* name);
 
 
 //ProtoType declare
-static void create_gtk_page();
-static void create_regx(Varialbe_Dict* val_dict);
-static void create_widget(Varialbe_Dict* val_dict);
+static GtkWidget* create_gtk_page();
+static GtkWidget* create_regx(Varialbe_Dict* val_dict, GtkWidget* vbox_top);
+static void create_widget(Varialbe_Dict* val_dict, GtkWidget* vbox_reg);
 static void change_widget_value(Varialbe_Dict* dict);
 static void set_default_page(int page_num);
 
@@ -302,16 +306,13 @@ static void cb_regr_button_clicked(GtkButton* button, gpointer user_data)
 
 }
 
-GtkWidget *vbox_top;
-GtkWidget *g_vbox;
-GtkCellRenderer *g_renderer = NULL;  //コンボボックスの表示で使う
-GtkWidget *g_notebook;
 
-void create_regx(Varialbe_Dict* val_dict) {
+
+GtkWidget* create_regx(Varialbe_Dict* val_dict, GtkWidget* vbox_top) {
 
 	GtkWidget *label_addr;
 	GtkWidget *label_data;
-
+	GtkWidget *vbox_reg;
 
 	GtkWidget *hsep;
 
@@ -319,12 +320,12 @@ void create_regx(Varialbe_Dict* val_dict) {
 
 	GtkWidget *frame;
 
-	g_vbox = gtk_vbox_new(FALSE, 5);
-	gtk_container_set_border_width(GTK_CONTAINER(g_vbox), 10);
+	vbox_reg = gtk_vbox_new(FALSE, 5);
+	gtk_container_set_border_width(GTK_CONTAINER(vbox_reg), 10);
 
 
 	hbox = gtk_hbox_new(FALSE, 20);
-	gtk_box_pack_start(GTK_BOX(g_vbox), hbox, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox_reg), hbox, FALSE, FALSE, 0);
 
 	char str_temp[256];
 
@@ -390,7 +391,7 @@ void create_regx(Varialbe_Dict* val_dict) {
 
 	/** separator **/
 	hbox = gtk_hbox_new(FALSE, 2);
-	gtk_box_pack_start(GTK_BOX(g_vbox), hbox, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox_reg), hbox, FALSE, FALSE, 0);
 
 
 	hsep = gtk_hseparator_new();
@@ -402,16 +403,19 @@ void create_regx(Varialbe_Dict* val_dict) {
 
 	frame = gtk_frame_new(str_temp);
 
-	gtk_container_add(GTK_CONTAINER(frame), g_vbox);
+	gtk_container_add(GTK_CONTAINER(frame), vbox_reg);
 
 	gtk_box_pack_start(GTK_BOX(vbox_top), frame, FALSE, FALSE, 0);
+
+
+	return vbox_reg;
 
 
 
 }
 
 
-void create_widget(Varialbe_Dict* val_dict) {
+void create_widget(Varialbe_Dict* val_dict, GtkWidget* vbox_reg) {
 
 	GtkWidget *hbox;
 	GtkWidget *button0;
@@ -419,7 +423,7 @@ void create_widget(Varialbe_Dict* val_dict) {
 	//GtkWidget *button_val;
 
 	hbox = gtk_hbox_new(FALSE, 15);
-	gtk_box_pack_start(GTK_BOX(g_vbox), hbox, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox_reg), hbox, FALSE, FALSE, 0);
 
 	button0 = gtk_button_new_with_label(val_dict->name);
 
@@ -555,12 +559,13 @@ void create_widget(Varialbe_Dict* val_dict) {
 }
 
 
-void create_gtk_page(char* str)
+GtkWidget* create_gtk_page(char* str)
 {
 
 	GtkWidget *page_label;
+	GtkWidget * vbox;
 
-	vbox_top = gtk_vbox_new(FALSE, 5);
+	vbox = gtk_vbox_new(FALSE, 5);
 
 
 	page_label = gtk_label_new(str);
@@ -574,9 +579,11 @@ void create_gtk_page(char* str)
 
 
 
-	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll_window), vbox_top);
+	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll_window), vbox);
 
 	gtk_notebook_append_page(GTK_NOTEBOOK(g_notebook), scroll_window, page_label);
+
+	return vbox;
 
 }
 
@@ -663,18 +670,21 @@ void start_create_gtk_widget() {
 
 	VarDictList* pos;
 
+	GtkWidget* vbox_page;
+	GtkWidget* vbox_reg;
+
 	for (pos = g_VarDictList; pos != NULL; pos = pos->next) {
 
 		if (pos->VarDict.val.type == PAGE) {
-			create_gtk_page(pos->VarDict.name);
+			vbox_page = create_gtk_page(pos->VarDict.name);
 		} else if (pos->VarDict.val.type == VARIABLE_REGX) {
 			printf("%s\n", pos->VarDict.name);
-			create_regx(&(pos->VarDict));
+			vbox_reg = create_regx(&(pos->VarDict), vbox_page);
 
 		} else if (pos->VarDict.val.type == VARIABLE_WIDGET) {
 			printf("%s\n", pos->VarDict.name);
 
-			create_widget(&(pos->VarDict));
+			create_widget(&(pos->VarDict), vbox_reg);
 		}
 	}
 

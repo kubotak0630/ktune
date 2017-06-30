@@ -33,7 +33,7 @@ hoge0.misk = 1
 val_3 = r["hoge00","hoge11","hoge22",2]
 
 
-/*
+
 
 
 $data64 hoge1
@@ -45,7 +45,7 @@ val1_0 = [0, 7,  1, 0]
 val1_1 = [0, 15, 4, 4]
 val1_2 = [0, 15, 2, 60]
 
-*/
+
 
 
 $page test_page2
