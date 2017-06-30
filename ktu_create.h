@@ -68,7 +68,7 @@ typedef struct VALUE_tag{
     ValType type;
     union {
         int  int_val;
-        int64_t long_val;
+        uint64_t long_val;
         char* str;
         RegX regx;
         Widget widget;

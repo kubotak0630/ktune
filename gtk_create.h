@@ -10,9 +10,9 @@
 
 struct Varialbe_Dict;  //前方参照
 
-void window_init(int argc, char** argv);
+void window_init(int argc, char** argv, int size_x, int size_y);
 void widget_show_all();
-void set_default();
+void set_default_all();
 
 void start_create_gtk_widget();
 

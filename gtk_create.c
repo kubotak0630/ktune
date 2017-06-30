@@ -21,16 +21,17 @@ static void create_gtk_page();
 static void create_regx(Varialbe_Dict* val_dict);
 static void create_widget(Varialbe_Dict* val_dict);
 static void change_widget_value(Varialbe_Dict* dict);
+static void set_default_page(int page_num);
 
 
-void window_init(int argc, char** argv) {
+void window_init(int argc, char** argv, int size_x, int size_y) {
 
 	gtk_init(&argc, &argv);
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
 	gtk_container_set_border_width(GTK_CONTAINER(window), 10);
 
-	gtk_widget_set_size_request(window, 420, 500);
+	gtk_widget_set_size_request(window, size_x, size_y);
 
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 }
@@ -43,7 +44,7 @@ void widget_show_all() {
 void set_reg32(uint32_t addr, uint32_t data, int32_t misk)
 {
 
-	printf("******* Call set_reg32 ********\n");
+	//printf("******* Call set_reg32 ********\n");
 	printf("addr = 0x%08X, data = 0x%08X, misk = %d\n", addr, data, misk);
 
 }
@@ -51,7 +52,7 @@ void set_reg32(uint32_t addr, uint32_t data, int32_t misk)
 void set_reg16(uint32_t addr, uint32_t data, int32_t misk)
 {
 
-	printf("******* Call set_reg16 ********\n");
+	//printf("******* Call set_reg16 ********\n");
 	printf("addr = 0x%08X, data = 0x%08X, misk = %d\n", addr, data, misk);
 
 }
@@ -59,7 +60,7 @@ void set_reg16(uint32_t addr, uint32_t data, int32_t misk)
 void set_reg64(uint32_t addr, uint64_t data, int32_t misk)
 {
 
-	printf("******* Call set_reg64 ********\n");
+	//printf("******* Call set_reg64 ********\n");
 	printf("addr = 0x%08X, data = 0x%016lX, misk = %d\n", addr, data, misk);
 
 }
@@ -74,9 +75,8 @@ static void change_widget_value(Varialbe_Dict* dict) {
 
 		if (pVal->u.regx.reg_type == REG32) {
 
-			VALUE v = eval_expression(pVal->u.regx.data_expr);
-			//int32_t eval_data = eval_expression(pVal->u.regx.data_expr);
-			int32_t eval_data = v.u.long_val;
+			int32_t eval_data = eval_expression(pVal->u.regx.data_expr).u.long_val;
+
 			sprintf(str_temp, "0x%08X", eval_data);
 
 			set_reg32(pVal->u.regx.addr, eval_data, pVal->u.regx.misk);
@@ -255,6 +255,18 @@ static void cb_radio_button_toggle(GtkWidget* widget, gpointer user_data) {
 	}
 }
 
+
+static void set_register(uint32_t addr, uint64_t data, int32_t misk, RegType reg_type) {
+
+	if (reg_type & (REG32 | REG32R)) {
+		set_reg32(addr, data, misk);
+	} else if (reg_type & (REG64 | REG64R)) {
+		set_reg32(addr, data, misk);
+	} else if (reg_type & (REG16 | REG16R)) {
+		set_reg16(addr, data, misk);
+	}
+}
+
 //data32r などのREGXXR のボタンが押された時、 レジスタを送信
 static void cb_regr_button_clicked(GtkButton* button, gpointer user_data)
 {
@@ -263,18 +275,10 @@ static void cb_regr_button_clicked(GtkButton* button, gpointer user_data)
 
 	VALUE v = eval_expression(dict->val.u.regx.data_expr);
 
-	int64_t eval_data = v.u.long_val;
+	uint64_t eval_data = v.u.long_val;
 
 
-	if (dict->val.u.regx.reg_type & (REG32 | REG32R)) {
-		set_reg32(dict->val.u.regx.addr, eval_data, dict->val.u.regx.misk);
-	}
-	else if (dict->val.u.regx.reg_type & (REG64 | REG64R)) {
-		set_reg64(dict->val.u.regx.addr, eval_data, dict->val.u.regx.misk);
-	}
-	else if (dict->val.u.regx.reg_type & (REG16 | REG16R)) {
-		set_reg16(dict->val.u.regx.addr, eval_data, dict->val.u.regx.misk);
-	}
+	set_register(dict->val.u.regx.addr, eval_data, dict->val.u.regx.misk, dict->val.u.regx.reg_type);
 
 	dict->val.u.regx.data_buf = eval_data;
 
@@ -301,7 +305,7 @@ static void cb_regr_button_clicked(GtkButton* button, gpointer user_data)
 GtkWidget *vbox_top;
 GtkWidget *g_vbox;
 GtkCellRenderer *g_renderer = NULL;  //コンボボックスの表示で使う
-
+GtkWidget *g_notebook;
 
 void create_regx(Varialbe_Dict* val_dict) {
 
@@ -550,7 +554,7 @@ void create_widget(Varialbe_Dict* val_dict) {
 
 }
 
-GtkWidget *notebook;
+
 void create_gtk_page(char* str)
 {
 
@@ -560,10 +564,19 @@ void create_gtk_page(char* str)
 
 
 	page_label = gtk_label_new(str);
-	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(notebook), GTK_POS_TOP);
+	gtk_notebook_set_tab_pos(GTK_NOTEBOOK(g_notebook), GTK_POS_TOP);
 
-	//gtk_container_add(GTK_CONTAINER(window), notebook);
-	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox_top, page_label);
+	GtkWidget *scroll_window;
+	scroll_window = gtk_scrolled_window_new(NULL, NULL);
+
+	//スクロールバーは自動設定にする
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+
+
+
+	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll_window), vbox_top);
+
+	gtk_notebook_append_page(GTK_NOTEBOOK(g_notebook), scroll_window, page_label);
 
 }
 
@@ -571,13 +584,17 @@ void create_gtk_page(char* str)
 static void menu_sel_default_all(gpointer user_data)
 {
 	printf("%s\n", (char*)user_data);
-	set_default();
+	set_default_all();
 }
 
 static void menu_sel_default_page(gpointer user_data)
 {
 	printf("%s\n", (char*)user_data);
-	printf("not yet implement\n");
+
+	int page_num = gtk_notebook_get_current_page(GTK_NOTEBOOK(g_notebook));
+	printf("page = %d\n", page_num);
+
+	set_default_page(page_num);
 
 }
 
@@ -639,8 +656,8 @@ void start_create_gtk_widget() {
 
 	gtk_box_pack_start(GTK_BOX(vbox_window), hsep, FALSE, FALSE, 0);
 
-	notebook = gtk_notebook_new();
-	gtk_container_add(GTK_CONTAINER(vbox_window), notebook);
+	g_notebook = gtk_notebook_new();
+	gtk_container_add(GTK_CONTAINER(vbox_window), g_notebook);
 
 
 
@@ -664,21 +681,54 @@ void start_create_gtk_widget() {
 
 }
 
-
-void set_default()
+//全てのpageをdefault値に戻してレジスタを送信する
+void set_default_all()
 {
 
 	VarDictList* pos;
 
 	for (pos = g_VarDictList; pos != NULL; pos = pos->next) {
-		if (pos->VarDict.val.type == VARIABLE_REGX) {
+		//if (pos->VarDict.val.type == VARIABLE_REGX) {
+		if (pos->VarDict.val.type == VARIABLE_WIDGET) {
 
-			int a = eval_expression(pos->VarDict.val.u.regx.data_expr).u.long_val;
-			set_reg32(pos->VarDict.val.u.regx.addr, a, pos->VarDict.val.u.regx.misk);
+			pos->VarDict.val.u.widget.val = pos->VarDict.val.u.widget.def;
+
+			if (pos->VarDict.val.u.widget.type == SCALE_WIDGET){
+				GtkScale* scale = (GtkScale*)(pos->VarDict.val.u.widget.p_gtk_self);
+				gtk_range_set_value(GTK_RANGE(scale), pos->VarDict.val.u.widget.val);
+			}
+
+			//uint64_t eval_data = eval_expression(pos->VarDict.val.u.regx.data_expr).u.long_val;
+
+
+
+			//set_register(pos->VarDict.val.u.regx.addr, eval_data, pos->VarDict.val.u.regx.misk, pos->VarDict.val.u.regx.reg_type);
 
 		}
-
 	}
+}
 
+void set_default_page(int page_num) {
+
+	VarDictList* pos;
+
+	int page = -1;
+	for (pos = g_VarDictList; pos != NULL; pos = pos->next) {
+
+		if (pos->VarDict.val.type == PAGE) {
+			page++;
+		}
+
+
+		if (page == page_num) {
+
+			if (pos->VarDict.val.type == VARIABLE_REGX) {
+
+				uint64_t eval_data = eval_expression(pos->VarDict.val.u.regx.data_expr).u.long_val;
+
+				set_register(pos->VarDict.val.u.regx.addr, eval_data, pos->VarDict.val.u.regx.misk, pos->VarDict.val.u.regx.reg_type);
+			}
+		}
+	}
 
 }
