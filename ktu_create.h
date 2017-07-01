@@ -60,6 +60,7 @@ typedef struct {
 	int shift;
 	int val;
 	void* p_gtk_self;   //自分自信のgtk_widget のアドレスを格納
+	void* p_gtk_init_button;  //初期化ボタンのアドレス
 }Widget;
 
 

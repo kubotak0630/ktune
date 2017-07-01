@@ -12,9 +12,10 @@ extern int g_debug;
 GtkWidget *window;
 
 
-//static GtkWidget *g_vbox;
 static GtkCellRenderer *g_renderer = NULL;  //コンボボックスの表示で使う
 static GtkWidget *g_notebook;
+
+static int g_reg_sened_stop = 0;
 
 extern VALUE eval_expression(Expression* expr);
 extern VALUE* search_relative_reg_from_list(char* name);
@@ -49,7 +50,9 @@ void set_reg32(uint32_t addr, uint32_t data, int32_t misk)
 {
 
 	//printf("******* Call set_reg32 ********\n");
-	printf("addr = 0x%08X, data = 0x%08X, misk = %d\n", addr, data, misk);
+	if (!g_reg_sened_stop) {
+		printf("addr = 0x%08X, data = 0x%08X, misk = %d\n", addr, data, misk);
+	}
 
 }
 
@@ -57,7 +60,9 @@ void set_reg16(uint32_t addr, uint32_t data, int32_t misk)
 {
 
 	//printf("******* Call set_reg16 ********\n");
-	printf("addr = 0x%08X, data = 0x%08X, misk = %d\n", addr, data, misk);
+	if (!g_reg_sened_stop) {
+		printf("addr = 0x%08X, data = 0x%08X, misk = %d\n", addr, data, misk);
+	}
 
 }
 
@@ -65,7 +70,9 @@ void set_reg64(uint32_t addr, uint64_t data, int32_t misk)
 {
 
 	//printf("******* Call set_reg64 ********\n");
-	printf("addr = 0x%08X, data = 0x%016lX, misk = %d\n", addr, data, misk);
+	if (!g_reg_sened_stop) {
+		printf("addr = 0x%08X, data = 0x%016lX, misk = %d\n", addr, data, misk);
+	}
 
 }
 
@@ -430,7 +437,7 @@ void create_widget(Varialbe_Dict* val_dict, GtkWidget* vbox_reg) {
 	gtk_box_pack_start(GTK_BOX(hbox), button0, TRUE, TRUE, 0);
 
 
-
+	val_dict->val.u.widget.p_gtk_init_button = button0;
 
 	//Scale Widget
 	if (val_dict->val.u.widget.type == SCALE_WIDGET) {
@@ -553,8 +560,13 @@ void create_widget(Varialbe_Dict* val_dict, GtkWidget* vbox_reg) {
 		exit(1);
 	}
 
+
+
+
 	//widgetの左側のボタンのハンドラを登録(ボタンを押すとdefault値に戻る)
 	g_signal_connect(G_OBJECT(button0), "clicked", G_CALLBACK(cb_def_button_clicked), (void* )val_dict);
+
+
 
 }
 
@@ -697,25 +709,34 @@ void set_default_all()
 
 	VarDictList* pos;
 
+	//register送信を止める Widgetを初期値に戻した時にレジスタが送信されるのを防止するため
+	g_reg_sened_stop = 1;
+
+	//Widgetを初期値に戻す(初期値に戻すボタンのコールバック関数を呼ぶ)
 	for (pos = g_VarDictList; pos != NULL; pos = pos->next) {
-		//if (pos->VarDict.val.type == VARIABLE_REGX) {
 		if (pos->VarDict.val.type == VARIABLE_WIDGET) {
 
-			pos->VarDict.val.u.widget.val = pos->VarDict.val.u.widget.def;
-
-			if (pos->VarDict.val.u.widget.type == SCALE_WIDGET){
-				GtkScale* scale = (GtkScale*)(pos->VarDict.val.u.widget.p_gtk_self);
-				gtk_range_set_value(GTK_RANGE(scale), pos->VarDict.val.u.widget.val);
-			}
-
-			//uint64_t eval_data = eval_expression(pos->VarDict.val.u.regx.data_expr).u.long_val;
-
-
-
-			//set_register(pos->VarDict.val.u.regx.addr, eval_data, pos->VarDict.val.u.regx.misk, pos->VarDict.val.u.regx.reg_type);
+			//static void cb_def_button_clicked(GtkButton* button, gpointer user_data)
+			cb_def_button_clicked(GTK_BUTTON(pos->VarDict.val.u.widget.p_gtk_init_button), &(pos->VarDict));
 
 		}
 	}
+
+	g_reg_sened_stop = 0;
+
+
+	//レジスタ値を送信
+	for (pos = g_VarDictList; pos != NULL; pos = pos->next) {
+		if (pos->VarDict.val.type == VARIABLE_REGX) {
+
+			uint64_t eval_data = eval_expression(pos->VarDict.val.u.regx.data_expr).u.long_val;
+
+			set_register(pos->VarDict.val.u.regx.addr,
+						eval_data,pos->VarDict.val.u.regx.misk,
+						pos->VarDict.val.u.regx.reg_type);
+		}
+	}
+
 }
 
 void set_default_page(int page_num) {
@@ -723,22 +744,58 @@ void set_default_page(int page_num) {
 	VarDictList* pos;
 
 	int page = -1;
+
+	//register送信を止める Widgetを初期値に戻した時にレジスタが送信されるのを防止するため
+	g_reg_sened_stop = 1;
+
 	for (pos = g_VarDictList; pos != NULL; pos = pos->next) {
 
 		if (pos->VarDict.val.type == PAGE) {
 			page++;
+		} else if (page == page_num) {
+
+			//Widgetを初期値に戻す(初期値に戻すボタンのコールバック関数を呼ぶ)
+
+			if (pos->VarDict.val.type == VARIABLE_WIDGET) {
+
+				//static void cb_def_button_clicked(GtkButton* button, gpointer user_data)
+				cb_def_button_clicked(
+						GTK_BUTTON(pos->VarDict.val.u.widget.p_gtk_init_button),
+						&(pos->VarDict));
+			}
+
+			//次のページがきたらループを抜ける
+			if (pos->VarDict.val.type == PAGE) {
+				break;
+			}
 		}
 
+	}
 
-		if (page == page_num) {
+	g_reg_sened_stop = 0;
+	page = -1;
 
+	//レジスタ値を送信
+	for (pos = g_VarDictList; pos != NULL; pos = pos->next) {
+
+		if (pos->VarDict.val.type == PAGE) {
+			page++;
+		} else if (page == page_num) {
 			if (pos->VarDict.val.type == VARIABLE_REGX) {
 
-				uint64_t eval_data = eval_expression(pos->VarDict.val.u.regx.data_expr).u.long_val;
+				uint64_t eval_data = eval_expression(
+						pos->VarDict.val.u.regx.data_expr).u.long_val;
 
-				set_register(pos->VarDict.val.u.regx.addr, eval_data, pos->VarDict.val.u.regx.misk, pos->VarDict.val.u.regx.reg_type);
+				set_register(pos->VarDict.val.u.regx.addr, eval_data,
+						pos->VarDict.val.u.regx.misk,
+						pos->VarDict.val.u.regx.reg_type);
+
+			}
+
+			//次のページがきたらループを抜ける
+			if (pos->VarDict.val.type == PAGE) {
+				break;
 			}
 		}
 	}
-
 }
