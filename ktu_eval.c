@@ -176,6 +176,31 @@ int eval_scale_widet_assign_expression(Expression* expr)
 
 }
 
+
+int eval_spin_widet_assign_expression(Expression* expr)
+{
+
+
+	Widget widgetData;
+
+
+	widgetData.min = eval_expression(expr->u.scale_widget_assign_expr.expr_min).u.long_val;
+	widgetData.max = eval_expression(expr->u.scale_widget_assign_expr.expr_max).u.long_val;
+	widgetData.def = eval_expression(expr->u.scale_widget_assign_expr.expr_def).u.long_val;
+	widgetData.shift = eval_expression(expr->u.scale_widget_assign_expr.expr_shift).u.long_val;
+	widgetData.val = widgetData.def; //ここではvalの値はdefをいれておく
+
+
+	widgetData.type = SPIN_WIDGET;
+
+	//scale型変数の作成
+	add_variable_list(expr->u.scale_widget_assign_expr.str_name, (void*)&widgetData, VARIABLE_WIDGET, 0);
+
+	return 0;
+
+}
+
+
 int eval_enum_widet_assign_expression(Expression* expr)
 {
 
@@ -372,6 +397,12 @@ VALUE eval_expression(Expression* expr)
     	eval_scale_widet_assign_expression(expr);
     	return v;
 
+    case SPIN_WIDGET_ASSIGN_EXPRESSION:
+
+    	//変数を登録するだけ。xtuenの操作は後でやる
+    	 eval_spin_widet_assign_expression(expr);
+    	 return v;
+
     //combo_box or radio
     case ENUM_WIDGET_ASSIGN_EXPRESSION:
 
@@ -453,7 +484,7 @@ void add_variable_list(char* name, void* pData, ValType val_type, RegType reg_ty
 		node->VarDict.val.u.widget.def = p->def;
 
 		//SCALE Widget
-		if (p->type == SCALE_WIDGET || p->type == BUTTON_WIDGET) {
+		if (p->type == SCALE_WIDGET || p->type == BUTTON_WIDGET || p->type == SPIN_WIDGET) {
 
 			//構造体のコピー
 			node->VarDict.val.u.widget.min = p->min;

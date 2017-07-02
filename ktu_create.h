@@ -42,6 +42,7 @@ typedef struct {
 //widgetの種類
 typedef enum {
 	SCALE_WIDGET = 1,
+	SPIN_WIDGET,
 	BUTTON_WIDGET,
 	COMBO_WIDGET,
 	RADIO_WIDGET,
@@ -113,6 +114,7 @@ typedef enum {
     MINUS_EXPRESSION,     //-5, -(6+7)
 	REGX_DECLARE,
 	SCALE_WIDGET_ASSIGN_EXPRESSION,
+	SPIN_WIDGET_ASSIGN_EXPRESSION,
 	ENUM_WIDGET_ASSIGN_EXPRESSION,   //combo or radio widget
 	PAGE_EXPRESSION         //gtk page
 } ExprType;
@@ -219,6 +221,7 @@ Expression* ktu_create_identifier_expression(char* str);
 Expression* ktu_create_minus_expression(Expression* operand);
 Expression* ktu_create_declare_expression(char* str, RegType type);
 Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
+Expression* ktu_create_assign_spin_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
 Expression* ktu_create_assign_enum_widget(char* ident, widgetType type);
 
 

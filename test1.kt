@@ -20,13 +20,13 @@ $page test_page1
 $data32 hoge0
 hoge0.addr = 0x5
 #hoge0.data = val_0 | val_1<<4 | val_2<<8 
-hoge0.data = val_3
+hoge0.data = val_0 | val_3
 hoge0.misk = 1
 
 
 #[min,max,def,shift]
 
-#val_0 = [0, (3+2)*2,  1, 0]
+val_0 = spin[0, (3+2)*2,  1, 4]
 #val_1 = [0, 15, 10, 0]
 #val_2 = [0, 1, 1, 0]
 

@@ -138,9 +138,20 @@ static void cb_scale_changed(GtkScale* scale, gpointer user_data)
     //変数リストの値を更新
 	dict->val.u.widget.val = (int)gtk_range_get_value(GTK_RANGE(scale));
 
-    //printf("call cb_scale_chagend\n");
 
     change_widget_value(dict);
+
+}
+
+static void cb_spin_changed(GtkSpinButton* spin, gpointer user_data)
+{
+
+	Varialbe_Dict* dict = (Varialbe_Dict*)user_data;
+
+	//変数リストの値を更新
+	dict->val.u.widget.val = (int)gtk_spin_button_get_value(spin);
+
+	change_widget_value(dict);
 
 }
 
@@ -173,6 +184,10 @@ static void cb_def_button_clicked(GtkButton* button, gpointer user_data)
 
 		//gtk_range_set_value() をよぶことで値が変更してcb_scale_changed が呼ばれるので
 		//ボタンWidgetのように手動で値の変更を判定する必要はない
+	}
+	else if (dict->val.u.widget.type == SPIN_WIDGET){
+		GtkSpinButton* spin = (GtkSpinButton*)(dict->val.u.widget.p_gtk_self);
+		gtk_spin_button_set_value(spin, dict->val.u.widget.def);
 	}
 	else if (dict->val.u.widget.type == COMBO_WIDGET){
 		GtkComboBox* combo = (GtkComboBox*)(dict->val.u.widget.p_gtk_self);
@@ -554,6 +569,25 @@ void create_widget(Varialbe_Dict* val_dict, GtkWidget* vbox_reg) {
 		gtk_box_pack_start(GTK_BOX(hbox), vbox_radio, TRUE, TRUE, 0);
 
 	}
+	else if (val_dict->val.u.widget.type == SPIN_WIDGET) {
+		int min = val_dict->val.u.widget.min;
+		int max = val_dict->val.u.widget.max;
+		int def = val_dict->val.u.widget.def;
+
+		widget0 = gtk_spin_button_new_with_range(min, max, 1);
+
+		gtk_spin_button_set_value(GTK_SPIN_BUTTON(widget0), def);
+
+		//自分自身のscale のアドレスを格納(ボタンが押された時にdefaultに戻すため)
+		val_dict->val.u.widget.p_gtk_self = widget0;
+
+
+		g_signal_connect(G_OBJECT(widget0), "value-changed",
+						G_CALLBACK(cb_spin_changed), (void* )val_dict);
+
+
+		gtk_box_pack_start(GTK_BOX(hbox), widget0, TRUE, TRUE, 0);
+	}
 	else {
 
 		fprintf(stderr, "error create_widget(), unknown widget\n");
@@ -578,6 +612,7 @@ GtkWidget* create_gtk_page(char* str)
 	GtkWidget * vbox;
 
 	vbox = gtk_vbox_new(FALSE, 5);
+	gtk_container_set_border_width(GTK_CONTAINER(vbox), 5);
 
 
 	page_label = gtk_label_new(str);
@@ -589,11 +624,10 @@ GtkWidget* create_gtk_page(char* str)
 	//スクロールバーは自動設定にする
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll_window), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
-
-
 	gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(scroll_window), vbox);
 
 	gtk_notebook_append_page(GTK_NOTEBOOK(g_notebook), scroll_window, page_label);
+
 
 	return vbox;
 

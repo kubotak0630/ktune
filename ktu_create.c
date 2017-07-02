@@ -215,6 +215,24 @@ Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expressi
 
 }
 
+//Spin Widget
+Expression* ktu_create_assign_spin_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4)
+{
+	Expression* expr;
+	expr = ktu_alloc_expression(SPIN_WIDGET_ASSIGN_EXPRESSION);
+
+	expr->u.scale_widget_assign_expr.str_name = ident;
+	expr->u.scale_widget_assign_expr.expr_min = a1;
+	expr->u.scale_widget_assign_expr.expr_max = a2;
+	expr->u.scale_widget_assign_expr.expr_def = a3;
+	expr->u.scale_widget_assign_expr.expr_shift = a4;
+
+
+	return expr;
+
+}
+
+
 Expression* ktu_create_page(char* ident)
 {
 	Expression* expr;

@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
 	printf("\n*** show gtk val ********\n");
 
-	window_init(argc, argv, 200, 400);
+	window_init(argc, argv, 420, 640);
 
 	start_create_gtk_widget();
 

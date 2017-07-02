@@ -29,6 +29,7 @@ int yywrap(void)
 <INITIAL>"="  return ASSIGN;
 <INITIAL>"c["  return C_LBR;  //combo widget
 <INITIAL>"r["  return R_LBR;  //radio widget
+<INITIAL>"spin[" return SPIN_LBR;
 <INITIAL>"["  return LBR;
 <INITIAL>"]"  return RBR;
 <INITIAL>","  return COMMA;

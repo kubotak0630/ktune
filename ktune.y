@@ -22,10 +22,10 @@ extern StatementList* g_st_list;
 %token <ident> IDENT IDENT_MEMBER
 //token <ident> WIDGET_SCALE_LITERAL
 %token ADD SUB MUL DIV LP RP ASSIGN CR BIT_AND BIT_OR BIT_L_SHIFT BIT_R_SHIFT
-%token C_LBR R_LBR LBR RBR COMMA
+%token C_LBR R_LBR SPIN_LBR LBR RBR COMMA
 %token REG_DATA16 REG_DATA32 REG_DATA64 REG_DATA16R REG_DATA32R REG_DATA64R GTK_PAGE
 %type <expression> calc_expr expr primary register_declare  page_create 
-%type <expression> widget_scalse_assign widget_combo_assign widget_radio_assign
+%type <expression> widget_scalse_assign widget_combo_assign widget_radio_assign widget_spin_assign
 
 %left BIT_AND BIT_OR
 %left BIT_L_SHIFT BIT_R_SHIFT
@@ -70,6 +70,7 @@ expr
   }
   | register_declare
   | widget_scalse_assign
+  | widget_spin_assign
   | page_create
   | widget_combo_assign
   | widget_radio_assign
@@ -182,7 +183,17 @@ widget_scalse_assign
   	  $$ = ktu_create_assign_scale_widget($1, $4, $6, $8, $10);
   }
   ;
-  
+
+//val = [expr, expr, expr, expr]
+widget_spin_assign
+  : IDENT ASSIGN SPIN_LBR calc_expr COMMA calc_expr COMMA calc_expr COMMA calc_expr RBR
+  {
+  	  $$ = ktu_create_assign_spin_widget($1, $4, $6, $8, $10);
+  }
+  ;
+
+ 
+ 
 page_create
   : GTK_PAGE IDENT
   {
