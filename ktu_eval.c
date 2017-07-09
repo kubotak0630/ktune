@@ -10,7 +10,7 @@ char g_search_str[64];
 
 /*** prototype declare ***********************/
 VALUE get_variable_from_list(char* name, int line_num);
-VALUE eval_expression(Expression* expr);
+//VALUE eval_expression(Expression* expr);
 void set_reg_variable(char* ident, char* member, void* pData);
 
 
@@ -91,7 +91,7 @@ int eval_assign_expression(char* ident, int is_register_flg, Expression* expr)
     }
 
 
-    printf("eval_assign_expr: %s\n", ident);
+    //printf("eval_assign_expr: %s\n", ident);
     
 
     return ret_val;
@@ -263,7 +263,7 @@ void debug_convert_expr_type(ExprType type, char* str){
 VALUE eval_expression(Expression* expr)
 {
 
-    uint64_t reft_val;
+    uint64_t left_val;
     uint64_t right_val;
 
     VALUE v;
@@ -302,78 +302,89 @@ VALUE eval_expression(Expression* expr)
 
 
     case ADD_EXPRESSION:
-        reft_val = eval_expression(expr->u.binary_expr.left).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
         right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
         v.type = VARIABLE_LONG;
-        v.u.long_val = reft_val + right_val;
+        v.u.long_val = left_val + right_val;
         return v;
 
   
     case SUB_EXPRESSION:
 
-        reft_val = eval_expression(expr->u.binary_expr.left).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
         right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
         v.type = VARIABLE_LONG;
-        v.u.long_val = reft_val - right_val;
+        v.u.long_val = left_val - right_val;
         return v;
 
 
     case MUL_EXPRESSION:
 
-        reft_val = eval_expression(expr->u.binary_expr.left).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
         right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
         v.type = VARIABLE_LONG;
-        v.u.long_val = reft_val * right_val;
+        v.u.long_val = left_val * right_val;
         return v;
 
 
     case DIV_EXPRESSION:
 
-        reft_val = eval_expression(expr->u.binary_expr.left).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
         right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
         v.type = VARIABLE_LONG;
-        v.u.long_val = reft_val / right_val;
+        v.u.long_val = left_val / right_val;
         return v;
 
 
 
     case BIT_AND_EXPRESSION:
-    	reft_val = eval_expression(expr->u.binary_expr.left).u.long_val;
+    	left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
 	    right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
 	    v.type = VARIABLE_LONG;
-	    v.u.long_val = reft_val & right_val;
+	    v.u.long_val = left_val & right_val;
 	    return v;
 
     case BIT_OR_EXPRESSION:
-    	reft_val = eval_expression(expr->u.binary_expr.left).u.long_val;
+    	left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
  		right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
  		v.type = VARIABLE_LONG;
- 		v.u.long_val = reft_val | right_val;
+ 		v.u.long_val = left_val | right_val;
  		return v;
 
 
     case BIT_L_SHIFT_EXPRESSION:
-        reft_val = eval_expression(expr->u.binary_expr.left).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
      	right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
      	v.type = VARIABLE_LONG;
-     	v.u.long_val = reft_val << right_val;
+     	v.u.long_val = left_val << right_val;
      	return v;
 
 
     case BIT_R_SHIFT_EXPRESSION:
-        reft_val = eval_expression(expr->u.binary_expr.left).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
         right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
         v.type = VARIABLE_LONG;
-        v.u.long_val = reft_val >> right_val;
+        v.u.long_val = left_val >> right_val;
         return v;
+
+
+    case EQ_EXPRESSION:
+    	left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
+    	right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
+
+		v.type = VARIABLE_LONG;
+		v.u.long_val = (left_val == right_val) ;
+
+		return v;
+
 
 
     case MINUS_EXPRESSION:
@@ -461,7 +472,7 @@ void add_variable_list(char* name, void* pData, ValType val_type, RegType reg_ty
 
 
 	node = malloc(sizeof(VarDictList));
-	node->next = NULL;
+
 
 	node->VarDict.val.type = val_type;
 
@@ -531,6 +542,7 @@ void add_variable_list(char* name, void* pData, ValType val_type, RegType reg_ty
 	//リストが空の時
 	if (g_VarDictList == NULL) {
 		node->prev = NULL;
+		node->next = NULL;
 		g_VarDictList = node;
 		return;
 
@@ -560,24 +572,27 @@ void add_variable_list(char* name, void* pData, ValType val_type, RegType reg_ty
 	//変数リストの末尾に追加
 	if (new_flg) {
 		node->prev = pos;
+		node->next = NULL;
 		pos->next = node;
 	}
 	//上書き(古い変数を削除して入れ替える)
 	else {
-		VarDictList* temp = pos;
 
 		//先頭の要素
 		if (pos->prev == NULL) {
 
 			g_VarDictList = node;
+			node->prev = NULL;
+			node->next = NULL;
 
-			free(temp);
+			free(pos); //古いNodeを削除
 		}
 		else {
-			pos->prev->next = node;
-			node->prev = pos;
+			pos->prev->next = node;  //New Nodeをつなぐ
+			node->prev = pos->prev;
+			node->next = pos->next;
 
-			free(temp);
+			free(pos);
 		}
 	}
 }
@@ -687,7 +702,7 @@ VALUE* search_relative_reg_from_list(char* name)
 
 }
 
-
+/*
 void execute_statement(Statement* statement)
 {
 
@@ -721,7 +736,7 @@ void execute_statement_list(StatementList* list)
     }
 
 }
-
+*/
 char* alloc_string(char *str)
 {
     char* new_str;

@@ -17,7 +17,7 @@ static GtkWidget *g_notebook;
 
 static int g_reg_sened_stop = 0;
 
-extern VALUE eval_expression(Expression* expr);
+
 extern VALUE* search_relative_reg_from_list(char* name);
 
 
@@ -394,7 +394,7 @@ GtkWidget* create_regx(Varialbe_Dict* val_dict, GtkWidget* vbox_top) {
 	}
 	else if (val_dict->val.u.regx.reg_type & (REG64 | REG64R)) {
 		uint64_t eval_data = eval_expression(val_dict->val.u.regx.data_expr).u.long_val;
-		sprintf(str_temp, "0x%08X-", (uint32_t)(eval_data >> 32));
+		sprintf(str_temp, "0x%08X_", (uint32_t)(eval_data >> 32));
 		sprintf(str_temp_l, "%08X", (uint32_t)(eval_data & 0xFFFFFFFF));
 		strcat(str_temp, str_temp_l);
 

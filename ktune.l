@@ -15,27 +15,31 @@ int yywrap(void)
 %%
 
 
-
-<INITIAL>"+"  return ADD;
-<INITIAL>"-"  return SUB;
-<INITIAL>"*"  return MUL;
-<INITIAL>"/"  return DIV;
-<INITIAL>"|"  return BIT_OR;
-<INITIAL>"&"  return BIT_AND;
-<INITIAL>"<<" return BIT_L_SHIFT;
-<INITIAL>">>" return BIT_R_SHIFT;
-<INITIAL>"("  return LP;
-<INITIAL>")"  return RP;
-<INITIAL>"="  return ASSIGN;
-<INITIAL>"c["  return C_LBR;  //combo widget
-<INITIAL>"r["  return R_LBR;  //radio widget
+<INITIAL>"if"    return IF;
+<INITIAL>"else"  return ELSE;
+<INITIAL>"+"     return ADD;
+<INITIAL>"-"     return SUB;
+<INITIAL>"*"     return MUL;
+<INITIAL>"/"     return DIV;
+<INITIAL>"|"     return BIT_OR;
+<INITIAL>"&"     return BIT_AND;
+<INITIAL>"<<"    return BIT_L_SHIFT;
+<INITIAL>">>"    return BIT_R_SHIFT;
+<INITIAL>"("     return LP;
+<INITIAL>")"     return RP;
+<INITIAL>"{"     return LC;
+<INITIAL>"}"     return RC;
+<INITIAL>"="     return ASSIGN;
+<INITIAL>"=="    return EQ;
+<INITIAL>"c["    return C_LBR;  //combo widget
+<INITIAL>"r["    return R_LBR;  //radio widget
 <INITIAL>"spin[" return SPIN_LBR;
-<INITIAL>"["  return LBR;
-<INITIAL>"]"  return RBR;
-<INITIAL>","  return COMMA;
+<INITIAL>"["     return LBR;
+<INITIAL>"]"     return RBR;
+<INITIAL>","     return COMMA;
 <INITIAL>"\n" {
 	increment_line_number();
-	return CR;
+	//return CR;
 }
 <INITIAL>"$data16"  return REG_DATA16;
 <INITIAL>"$data32"  return REG_DATA32;

@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 
+
 struct Expression_tag;
 
 /**** Variable *****************/
@@ -109,6 +110,7 @@ typedef enum {
     DIV_EXPRESSION,      // "/"
 	BIT_AND_EXPRESSION,  // "&"
 	BIT_OR_EXPRESSION,  // "|"
+	EQ_EXPRESSION,      // "=="
 	BIT_L_SHIFT_EXPRESSION,  // "<<"
 	BIT_R_SHIFT_EXPRESSION,  // ">>"
     MINUS_EXPRESSION,     //-5, -(6+7)
@@ -120,7 +122,7 @@ typedef enum {
 } ExprType;
 
 
-//struct Expression_tag;
+
 
 
 typedef struct {
@@ -183,29 +185,48 @@ typedef struct Expression_tag {
 
 }Expression;
 
+/***** Statement *************************************/
+struct Statement_tag;  //前方参照
 
 typedef enum {
     EXPRESSION_STATEMENT = 1,
-
+	IF_STATEMENT
 } StatementType;
 
-typedef struct Statement_tag {
+typedef struct StatementList_tag {
+
+	struct Statement_tag *statement;
+    struct StatementList_tag *next;
+
+} StatementList;
+/*
+typedef struct {
+    StatementList       *statement_list;
+} Block;
+*/
+
+typedef struct {
+	Expression *condition;
+	StatementList *true_stmt_list;
+	StatementList *else_stmt_list;
+} IfStatement;
+
+
+typedef struct Statement_tag{
 
     StatementType type;
     int line_number;
 
     union {
         Expression *expr_s;
+        IfStatement if_s;
     } u;
 
 } Statement;
 
-typedef struct StatementList_tag {
 
-    Statement *statement;
-    struct StatementList_tag *next;
 
-} StatementList;
+
 
 
 
@@ -224,7 +245,7 @@ Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expressi
 Expression* ktu_create_assign_spin_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
 Expression* ktu_create_assign_enum_widget(char* ident, widgetType type);
 
-
+Statement* ktu_create_if_statement(Expression* condition, StatementList* true_stmt_list, StatementList* else_stmt_list);
 
 Expression* ktu_create_page(char* ident);
 
@@ -232,16 +253,18 @@ Expression* ktu_create_page(char* ident);
 Statement* ktu_create_expression_statement(Expression* expr);
 StatementList* ktu_create_statement_list(Statement* statement);
 
-void ktu_chain_statement_list(StatementList* list, Statement* statement);
+StatementList* ktu_chain_statement_list(StatementList* list, Statement* statement);
 
 void ktu_create_valiable_length_val(Expression* expr);
 
 void ktu_add_valiable_length_val(Expression* expr);
 
+VALUE eval_expression(Expression* expr);
+
 /*** temp 後で関数ポインタをメンバにした方がいい***/
 int eval_assign_expression(char* ident, int is_register_flg, Expression* expr);
 
-void execute_statement_list(StatementList* list);
+void ktu_execute_statement_list(StatementList* list);
 
 void increment_line_number();
 

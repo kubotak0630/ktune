@@ -26,7 +26,7 @@ static Statement* alloc_statement(StatementType type)
 Statement* ktu_create_expression_statement(Expression* expr)
 {
     Statement *st;
-    printf("create expr stm :%p\n", expr);
+    printf("call ktu_create_expression_statement\n");
     st = alloc_statement(EXPRESSION_STATEMENT);
     st->u.expr_s = expr;
 
@@ -34,11 +34,29 @@ Statement* ktu_create_expression_statement(Expression* expr)
 
 }
 
+
+Statement* ktu_create_if_statement(Expression* condition, StatementList* true_stmt_list, StatementList* else_stmt_list)
+{
+	Statement* st;
+
+	st = alloc_statement(IF_STATEMENT);
+	st->u.if_s.condition = condition;
+	st->u.if_s.true_stmt_list = true_stmt_list;
+	st->u.if_s.else_stmt_list = else_stmt_list;
+
+	return st;
+
+
+
+
+}
+
+
 StatementList* ktu_create_statement_list(Statement* statement) 
 {
     StatementList* st_list;
 
-    printf("call ktu_create_statement_list\n");
+    //printf("call ktu_create_statement_list\n");
     st_list = malloc(sizeof(StatementList));
     st_list->statement = statement;
     st_list->next = NULL;
@@ -47,7 +65,7 @@ StatementList* ktu_create_statement_list(Statement* statement)
 
 }
 
-void ktu_chain_statement_list(StatementList* list, Statement* statement)
+StatementList* ktu_chain_statement_list(StatementList* list, Statement* statement)
 {
     StatementList* pos;
 
@@ -61,6 +79,8 @@ void ktu_chain_statement_list(StatementList* list, Statement* statement)
 
     //add list
     pos->next = ktu_create_statement_list(statement);
+
+    return list;
 
 }
 
@@ -320,7 +340,6 @@ Expression* ktu_create_assign_enum_widget(char* ident, widgetType type)
 
 	return expr;
 }
-
 
 
 

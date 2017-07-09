@@ -10,8 +10,10 @@ extern StatementList* g_st_list;
 %}
 %union {
     char *ident;
-    Expression *expression;
-    //Statement *statement;
+    Expression *expr;
+    Statement *stmt;
+    StatementList *stmt_list;
+    //Block               *block;
     int int_value;
     //double double_value;
 }
@@ -21,42 +23,102 @@ extern StatementList* g_st_list;
 %token <ident> STRING_LITERAL
 %token <ident> IDENT IDENT_MEMBER
 //token <ident> WIDGET_SCALE_LITERAL
-%token ADD SUB MUL DIV LP RP ASSIGN CR BIT_AND BIT_OR BIT_L_SHIFT BIT_R_SHIFT
+%token IF ELSE ADD SUB MUL DIV LP RP LC RC ASSIGN EQ BIT_AND BIT_OR BIT_L_SHIFT BIT_R_SHIFT
 %token C_LBR R_LBR SPIN_LBR LBR RBR COMMA
 %token REG_DATA16 REG_DATA32 REG_DATA64 REG_DATA16R REG_DATA32R REG_DATA64R GTK_PAGE
-%type <expression> calc_expr expr primary register_declare  page_create 
-%type <expression> widget_scalse_assign widget_combo_assign widget_radio_assign widget_spin_assign
+%type <expr> calc_expr expression primary register_declare  page_create 
+%type <expr> widget_scalse_assign widget_combo_assign widget_radio_assign widget_spin_assign
+%type <stmt> statement if_statement expression_statement block_item
+%type <stmt_list> statement_list block_item_list block
 
-%left BIT_AND BIT_OR
 %left BIT_L_SHIFT BIT_R_SHIFT
+%nonassoc EQ
+%left BIT_AND BIT_OR
 %left ADD SUB
 %left MUL DIV
-%nonassoc UMINUS
+%right UMINUS  //マイナス単項演算子
+
 
 %%
-line_list
-  : line
-  | line_list line
+
+translation_unit
+  : statement_list
   ;
-line
-  : expr CR
+
+statement_list
+  : statement
   {
-      //printf(">>%d\n", $1);
-      Statement* st_0;
-      st_0 = ktu_create_expression_statement($1);
-
-      
-      if (g_st_list == NULL) {
-          g_st_list = ktu_create_statement_list(st_0);
-      }
-      else {
-          ktu_chain_statement_list(g_st_list, st_0);
-      }
+    //printf("ktu_create_statement_list\n");
+    g_st_list = ktu_create_statement_list($1);
   }
-  | CR
+  | translation_unit statement
+  {
+    //printf("ktu_chain_statement_list\n");
+    ktu_chain_statement_list(g_st_list, $2);
+  }
+  ;
+  
+
+statement
+  : expression_statement
+  | if_statement
+//  | compound_statement
   ;
 
-expr
+
+if_statement
+  : IF LP expression RP block
+  {
+  	printf("--------- if_stmt --------------\n");
+  	$$ = ktu_create_if_statement($3, $5, NULL);
+  }
+  | IF LP expression RP block ELSE block
+  {
+     $$ = ktu_create_if_statement($3, $5, $7);
+  }
+  ;
+
+block
+	: LC RC
+	{
+	  printf("LC RC compound_statement\n");
+	}
+	| LC block_item_list RC
+	{
+		$$ = $2;
+		printf("compound_statement\n");
+	}
+	;
+
+block_item_list
+	: block_item 
+	{
+	  printf("new block item list --ktu_create_statement_list\n");
+	  $$ = ktu_create_statement_list($1);
+	}
+	| block_item_list block_item 
+	{
+	  printf("add block item list --ktu_create_statement_list\n");
+	  $$ = ktu_chain_statement_list($1, $2);
+	}
+	;
+
+block_item
+	: statement
+	{
+		$$ = $1;
+		printf("block_item\n");
+	}
+	;
+
+
+expression_statement
+  : expression {
+  	$$ = ktu_create_expression_statement($1);
+  }
+  ;
+
+expression
   : calc_expr
   | IDENT ASSIGN calc_expr
   {
@@ -112,6 +174,10 @@ calc_expr
   | calc_expr BIT_R_SHIFT calc_expr
   {
   	$$ = ktu_create_binary_expression(BIT_R_SHIFT_EXPRESSION, $1, $3);
+  }
+  | calc_expr EQ calc_expr
+  {
+    $$ = ktu_create_binary_expression(EQ_EXPRESSION, $1, $3);
   }
   ;
 
@@ -229,6 +295,9 @@ valiable_list
   	printf("*** variable list_bbbbb\n");
   }
   ;
+
+
+  
 
 %%
 int yyerror(char const *str)

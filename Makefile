@@ -1,6 +1,6 @@
 CC = gcc -g -O0
 CFLAGS = -Wall `pkg-config --cflags --libs gtk+-2.0`
-OBJS =  y.tab.o lex.yy.o main.o ktu_create.o ktu_eval.o gtk_create.o
+OBJS =  y.tab.o lex.yy.o main.o ktu_create.o ktu_eval.o ktu_execute.o gtk_create.o
 TARGET = hoge
 
 all: $(TARGET)

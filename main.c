@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
 
 
 	printf("\n**** start execute_statement_list ********\n\n");
-	execute_statement_list(g_st_list);
+	ktu_execute_statement_list(g_st_list);
 
 
 
