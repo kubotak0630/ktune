@@ -109,8 +109,14 @@ int64_t eval_identifier_expression(Expression* expr)
 
 	if (val.type == VARIABLE_INT) {
 
-		ret_val = val.u.int_val;
+		ret_val = val.u.long_val;
 	}
+	/*
+	else if (val.type == VARIABLE_STRING) {
+
+		//ret_val = val.u.str;
+	}
+	*/
 	else if (val.type == VARIABLE_WIDGET) {
 
 		ret_val = val.u.widget.val;
@@ -275,7 +281,7 @@ VALUE eval_expression(Expression* expr)
 
     switch(expr->type) {
     case INT_EXPRESSION:
-    	v.type = VARIABLE_LONG;
+    	v.type = VARIABLE_INT;
     	v.u.long_val = expr->u.int_value;
         return v;
 
@@ -287,7 +293,7 @@ VALUE eval_expression(Expression* expr)
 
     //変数を参照した時の動作 変数リストをサーチして値を返す
     case IDENT_EXPRESSION:
-    	v.type = VARIABLE_LONG;
+    	v.type = VARIABLE_INT;
     	v.u.long_val = eval_identifier_expression(expr);
         return v;
 
@@ -297,7 +303,7 @@ VALUE eval_expression(Expression* expr)
 
     case ASSIGN_EXPRESSION:
     	v.type = VARIABLE_INT;
-    	v.u.int_val = eval_assign_expression(expr->u.assign_expr.variable, expr->u.assign_expr.is_register_flg, expr->u.assign_expr.operand);
+    	v.u.long_val = eval_assign_expression(expr->u.assign_expr.variable, expr->u.assign_expr.is_register_flg, expr->u.assign_expr.operand);
     	return v;
 
 
@@ -305,7 +311,7 @@ VALUE eval_expression(Expression* expr)
         left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
         right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
-        v.type = VARIABLE_LONG;
+        v.type = VARIABLE_INT;
         v.u.long_val = left_val + right_val;
         return v;
 
@@ -315,7 +321,7 @@ VALUE eval_expression(Expression* expr)
         left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
         right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
-        v.type = VARIABLE_LONG;
+        v.type = VARIABLE_INT;
         v.u.long_val = left_val - right_val;
         return v;
 
@@ -325,7 +331,7 @@ VALUE eval_expression(Expression* expr)
         left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
         right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
-        v.type = VARIABLE_LONG;
+        v.type = VARIABLE_INT;
         v.u.long_val = left_val * right_val;
         return v;
 
@@ -335,7 +341,7 @@ VALUE eval_expression(Expression* expr)
         left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
         right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
-        v.type = VARIABLE_LONG;
+        v.type = VARIABLE_INT;
         v.u.long_val = left_val / right_val;
         return v;
 
@@ -345,7 +351,7 @@ VALUE eval_expression(Expression* expr)
     	left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
 	    right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
-	    v.type = VARIABLE_LONG;
+	    v.type = VARIABLE_INT;
 	    v.u.long_val = left_val & right_val;
 	    return v;
 
@@ -353,7 +359,7 @@ VALUE eval_expression(Expression* expr)
     	left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
  		right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
- 		v.type = VARIABLE_LONG;
+ 		v.type = VARIABLE_INT;
  		v.u.long_val = left_val | right_val;
  		return v;
 
@@ -362,7 +368,7 @@ VALUE eval_expression(Expression* expr)
         left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
      	right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
-     	v.type = VARIABLE_LONG;
+     	v.type = VARIABLE_INT;
      	v.u.long_val = left_val << right_val;
      	return v;
 
@@ -371,16 +377,17 @@ VALUE eval_expression(Expression* expr)
         left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
         right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
-        v.type = VARIABLE_LONG;
+        v.type = VARIABLE_INT;
         v.u.long_val = left_val >> right_val;
         return v;
 
 
     case EQ_EXPRESSION:
+
     	left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
     	right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
 
-		v.type = VARIABLE_LONG;
+		v.type = VARIABLE_INT;
 		v.u.long_val = (left_val == right_val) ;
 
 		return v;
@@ -389,7 +396,7 @@ VALUE eval_expression(Expression* expr)
 
     case MINUS_EXPRESSION:
 
-    	v.type = VARIABLE_LONG;
+    	v.type = VARIABLE_INT;
     	v.u.long_val = eval_minus_expression(expr->u.minus_expr);
     	return v;
 
@@ -483,7 +490,7 @@ void add_variable_list(char* name, void* pData, ValType val_type, RegType reg_ty
 
 	/*** 変数の値をセット ***************************/
 	if (val_type == VARIABLE_INT) {
-		node->VarDict.val.u.int_val = *((int*)pData);
+		node->VarDict.val.u.long_val = *((int*)pData);
 	}
 	else if (val_type == VARIABLE_WIDGET) {
 

@@ -309,6 +309,10 @@ void ktu_create_valiable_length_val(Expression* expr)
 		g_len_val_size = 1;
 		g_list_def = 0;
 	}
+	else if (expr->type == IDENT_EXPRESSION) {
+		fprintf(stderr, "syntax error, line near : %d, IDENT_EXPRESSION not yet implemented\n", expr->line_number);
+		exit(1);
+	}
 	else {
 		fprintf(stderr, "syntax error, line near : %d\n", expr->line_number);
 		exit(1);

@@ -10,8 +10,7 @@ struct Expression_tag;
 /**** Variable *****************/
 //変数の型を定義
 typedef enum {
-    VARIABLE_INT = 1,
-	VARIABLE_LONG,
+    VARIABLE_INT = 1,  //int64_t
 	VARIABLE_STRING,
 	VARIABLE_REGX,
 	VARIABLE_WIDGET,
@@ -70,8 +69,7 @@ typedef struct {
 typedef struct VALUE_tag{
     ValType type;
     union {
-        int  int_val;
-        uint64_t long_val;
+        int64_t long_val;
         char* str;
         RegX regx;
         Widget widget;
