@@ -32,9 +32,10 @@ extern StatementList* g_st_list;
 %type <stmt> statement if_statement expression_statement block_item
 %type <stmt_list> statement_list block_item_list block
 %type <elsif> elsif_item elsif_list
-%left BIT_L_SHIFT BIT_R_SHIFT
-%nonassoc EQ
+
 %left BIT_AND BIT_OR
+%nonassoc EQ
+left BIT_L_SHIFT BIT_R_SHIFT
 %left ADD SUB
 %left MUL DIV
 %right UMINUS  //マイナス単項演算子
@@ -311,12 +312,10 @@ widget_radio_assign
 valiable_list
   : calc_expr {
     ktu_create_valiable_length_val($1);
-  	printf("*** variable list_create\n");
   }
   | valiable_list COMMA calc_expr
   {
     ktu_add_valiable_length_val($3);
-  	printf("*** variable list_bbbbb\n");
   }
   ;
 
