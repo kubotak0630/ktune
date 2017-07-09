@@ -17,6 +17,7 @@ int yywrap(void)
 
 <INITIAL>"if"    return IF;
 <INITIAL>"else"  return ELSE;
+<INITIAL>"elsif"  return ELSIF;
 <INITIAL>"+"     return ADD;
 <INITIAL>"-"     return SUB;
 <INITIAL>"*"     return MUL;

@@ -4,19 +4,43 @@
 
 #include "ktu_create.h"
 
+/*** 戻り値 elsifのリストが実行された場合は1、実行されなければ0を返す**/
+static int execute_elsif(Elsif* elsif)
+{
+	Elsif* pos;
+	VALUE cond;
+	int ret_val = 0;
+
+	for (pos = elsif; pos != NULL; pos = pos->next) {
+		cond = eval_expression(pos->condition);
+
+		if (cond.u.long_val) {
+			ktu_execute_statement_list(pos->block);
+			ret_val = 1;
+			break;
+		}
+	}
+
+	return ret_val;
+}
 
 static void execute_if_statement(Statement* stmt)
 {
 	VALUE cond = eval_expression(stmt->u.if_s.condition);
+
+	int ret_elsif;
 
 	if (cond.u.long_val) {
 
 		ktu_execute_statement_list(stmt->u.if_s.true_stmt_list);
 	}
 	else {
-		ktu_execute_statement_list(stmt->u.if_s.else_stmt_list);
+		ret_elsif = execute_elsif(stmt->u.if_s.elsif);
 	}
 
+	if (!ret_elsif) {
+		ktu_execute_statement_list(stmt->u.if_s.else_stmt_list);
+	}
 
 }
 

@@ -199,15 +199,18 @@ typedef struct StatementList_tag {
     struct StatementList_tag *next;
 
 } StatementList;
-/*
-typedef struct {
-    StatementList       *statement_list;
-} Block;
-*/
+
+typedef struct Elsif_tag {
+	Expression* condition;
+	StatementList *block;
+	struct Elsif_tag *next;
+} Elsif;
+
 
 typedef struct {
 	Expression *condition;
 	StatementList *true_stmt_list;
+	Elsif *elsif;
 	StatementList *else_stmt_list;
 } IfStatement;
 
@@ -245,7 +248,10 @@ Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expressi
 Expression* ktu_create_assign_spin_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
 Expression* ktu_create_assign_enum_widget(char* ident, widgetType type);
 
-Statement* ktu_create_if_statement(Expression* condition, StatementList* true_stmt_list, StatementList* else_stmt_list);
+Statement* ktu_create_if_statement(Expression* condition, StatementList* true_stmt_list, Elsif* elsif, StatementList* else_stmt_list);
+Elsif* ktu_create_elsif(Expression *expr, StatementList* stmt_list);
+Elsif* ktu_chain_elsif_list(Elsif* list, Elsif* add);
+
 
 Expression* ktu_create_page(char* ident);
 

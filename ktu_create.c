@@ -35,22 +35,53 @@ Statement* ktu_create_expression_statement(Expression* expr)
 }
 
 
-Statement* ktu_create_if_statement(Expression* condition, StatementList* true_stmt_list, StatementList* else_stmt_list)
+Statement* ktu_create_if_statement(Expression* condition, StatementList* true_stmt_list, Elsif* elsif, StatementList* else_stmt_list)
 {
 	Statement* st;
 
 	st = alloc_statement(IF_STATEMENT);
 	st->u.if_s.condition = condition;
 	st->u.if_s.true_stmt_list = true_stmt_list;
+	st->u.if_s.elsif = elsif;
 	st->u.if_s.else_stmt_list = else_stmt_list;
 
 	return st;
+}
 
 
+Elsif* ktu_chain_elsif_list(Elsif* list, Elsif* add)
+{
+
+	Elsif *pos;
+
+	//リストの末尾を探す
+	pos = list;
+	while (pos->next != NULL) {
+	   pos = pos->next;
+	}
+
+	//add list
+	pos->next = add;
+
+	return list;
 
 
 }
 
+Elsif* ktu_create_elsif(Expression *expr, StatementList* stmt_list)
+{
+	Elsif *elsif;
+
+	elsif = malloc(sizeof(Elsif));
+
+	elsif->condition = expr;
+	elsif->block = stmt_list;
+	elsif->next = NULL;
+
+	return elsif;
+
+
+}
 
 StatementList* ktu_create_statement_list(Statement* statement) 
 {

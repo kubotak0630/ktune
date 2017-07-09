@@ -13,6 +13,7 @@ extern StatementList* g_st_list;
     Expression *expr;
     Statement *stmt;
     StatementList *stmt_list;
+    Elsif *elsif;
     //Block               *block;
     int int_value;
     //double double_value;
@@ -23,14 +24,14 @@ extern StatementList* g_st_list;
 %token <ident> STRING_LITERAL
 %token <ident> IDENT IDENT_MEMBER
 //token <ident> WIDGET_SCALE_LITERAL
-%token IF ELSE ADD SUB MUL DIV LP RP LC RC ASSIGN EQ BIT_AND BIT_OR BIT_L_SHIFT BIT_R_SHIFT
+%token IF ELSE ELSIF ADD SUB MUL DIV LP RP LC RC ASSIGN EQ BIT_AND BIT_OR BIT_L_SHIFT BIT_R_SHIFT
 %token C_LBR R_LBR SPIN_LBR LBR RBR COMMA
 %token REG_DATA16 REG_DATA32 REG_DATA64 REG_DATA16R REG_DATA32R REG_DATA64R GTK_PAGE
 %type <expr> calc_expr expression primary register_declare  page_create 
 %type <expr> widget_scalse_assign widget_combo_assign widget_radio_assign widget_spin_assign
 %type <stmt> statement if_statement expression_statement block_item
 %type <stmt_list> statement_list block_item_list block
-
+%type <elsif> elsif_item elsif_list
 %left BIT_L_SHIFT BIT_R_SHIFT
 %nonassoc EQ
 %left BIT_AND BIT_OR
@@ -62,7 +63,6 @@ statement_list
 statement
   : expression_statement
   | if_statement
-//  | compound_statement
   ;
 
 
@@ -70,23 +70,47 @@ if_statement
   : IF LP expression RP block
   {
   	printf("--------- if_stmt --------------\n");
-  	$$ = ktu_create_if_statement($3, $5, NULL);
+  	$$ = ktu_create_if_statement($3, $5, NULL, NULL);
   }
   | IF LP expression RP block ELSE block
   {
-     $$ = ktu_create_if_statement($3, $5, $7);
+     $$ = ktu_create_if_statement($3, $5, NULL, $7);
+  }
+  | IF LP expression RP block elsif_list
+  {
+    $$ = ktu_create_if_statement($3, $5, $6, NULL);
+  
+  }
+  | IF LP expression RP block elsif_list ELSE block
+  {
+    $$ = ktu_create_if_statement($3, $5, $6, $8);
+  }
+  ;
+
+
+elsif_list
+  : elsif_item
+  | elsif_list elsif_item
+  {
+    printf("elsif_list: ktu_chain_elsif_list\n");
+    $$ = ktu_chain_elsif_list($1, $2);
+  }
+  ;
+
+elsif_item
+  : ELSIF LP expression RP block
+  {
+  
+    printf("elsif_item: ktu_create_elsif\n");
+    $$ = ktu_create_elsif($3, $5);
   }
   ;
 
 block
-	: LC RC
-	{
-	  printf("LC RC compound_statement\n");
-	}
-	| LC block_item_list RC
+	: LC block_item_list RC
 	{
 		$$ = $2;
-		printf("compound_statement\n");
+		printf("block\n");
 	}
 	;
 
