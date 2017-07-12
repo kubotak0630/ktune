@@ -232,7 +232,8 @@ typedef struct Statement_tag{
 
 
 /*** ProtoType declare **************************/
-void add_variable_list(char* name, void* pData, ValType type, RegType reg_type);
+//void add_variable_list(char* name, void* pData, ValType type, RegType reg_type);
+void add_variable_list(char* name, VALUE* pVal);
 
 Expression* ktu_create_int_expression(ExprType type, int val);
 Expression* ktu_create_string_expression(char* str);

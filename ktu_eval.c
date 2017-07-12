@@ -49,22 +49,28 @@ int str_split(char* str, char* str_out1, char* str_out2)
 
 }
 
+/* 戻り値は0を返す if (a = 5) は0を返すことにする */
 int eval_assign_expression(char* ident, int is_register_flg, Expression* expr)
 {
 
     char str0[128];
     char str_mem[16];
 
-    //int ret_val = eval_expression(expr);
+
     int ret_val = 0;
 
+    VALUE v;
 
-    //INT型変数への代入
+    //INT型 or STRING 変数への代入
     if (is_register_flg == 0) {
 
 
-    	ret_val = eval_expression(expr).u.long_val;
-    	add_variable_list(ident, (void*)&ret_val, VARIABLE_INT, 0);
+    	//ret_val = eval_expression(expr).u.long_val;
+    	v = eval_expression(expr);
+
+    	//add_variable_list(ident, (void*)&(v.u.long_val), VARIABLE_INT, 0);
+    	add_variable_list(ident, &v);
+
     }
     //REGX型のメンバ変数への代入
     else {
@@ -98,30 +104,30 @@ int eval_assign_expression(char* ident, int is_register_flg, Expression* expr)
 
 }
 
-
-int64_t eval_identifier_expression(Expression* expr)
+/**  変数の参照時に呼ばれる。 listから変数を探して値を返す ***/
+VALUE eval_identifier_expression(Expression* expr)
 {
 
 	VALUE val;
 	val = get_variable_from_list(expr->u.ident, expr->line_number);
 
-	int64_t ret_val = 0;
+	VALUE ret_val;  ////戻り値はINTかSTRING とする。(widget型はshiftを計算した値のINTで返す)
 
 	if (val.type == VARIABLE_INT) {
 
-		ret_val = val.u.long_val;
+		ret_val.type = VARIABLE_INT;
+		ret_val.u.long_val = val.u.long_val;
 	}
-	/*
+
 	else if (val.type == VARIABLE_STRING) {
-
-		//ret_val = val.u.str;
+		ret_val.type = VARIABLE_STRING;
+		ret_val.u.str = val.u.str;
 	}
-	*/
+
 	else if (val.type == VARIABLE_WIDGET) {
+		ret_val.type = VARIABLE_INT;
+		ret_val.u.long_val = ((uint64_t)(val.u.widget.val) << val.u.widget.shift);
 
-		ret_val = val.u.widget.val;
-
-		ret_val = (ret_val << val.u.widget.shift);
 
 		if (strcmp(g_search_str, expr->u.ident) == 0) {
 			g_search_bingo = 1;
@@ -166,6 +172,7 @@ int eval_scale_widet_assign_expression(Expression* expr)
 	widgetData.shift = eval_expression(expr->u.scale_widget_assign_expr.expr_shift).u.long_val;
 	widgetData.val = widgetData.def; //ここではvalの値はdefをいれておく
 
+
 	if (widgetData.min == 0 && widgetData.max == 1) {
 		widgetData.type = BUTTON_WIDGET;
 	}
@@ -173,9 +180,13 @@ int eval_scale_widet_assign_expression(Expression* expr)
 		widgetData.type = SCALE_WIDGET;
 	}
 
+	VALUE v;
+	v.type = VARIABLE_WIDGET;
+	v.u.widget = widgetData;
+
 
 	//scale型変数の作成
-	add_variable_list(expr->u.scale_widget_assign_expr.str_name, (void*)&widgetData, VARIABLE_WIDGET, 0);
+	add_variable_list(expr->u.scale_widget_assign_expr.str_name, &v);
 
 	return 0;
 
@@ -199,8 +210,12 @@ int eval_spin_widet_assign_expression(Expression* expr)
 
 	widgetData.type = SPIN_WIDGET;
 
+	VALUE v;
+	v.type = VARIABLE_WIDGET;
+	v.u.widget = widgetData;
+
 	//scale型変数の作成
-	add_variable_list(expr->u.scale_widget_assign_expr.str_name, (void*)&widgetData, VARIABLE_WIDGET, 0);
+	add_variable_list(expr->u.scale_widget_assign_expr.str_name, &v);
 
 	return 0;
 
@@ -220,9 +235,12 @@ int eval_enum_widet_assign_expression(Expression* expr)
 
 	widgetData.val = widgetData.def; //ここではvalの値はdefをいれておく
 
+	VALUE v;
+	v.type = VARIABLE_WIDGET;
+	v.u.widget = widgetData;
 
 	//scale型変数の作成
-	add_variable_list(expr->u.enum_widget_assign_expr.str_name, (void*)&widgetData, VARIABLE_WIDGET, 0);
+	add_variable_list(expr->u.enum_widget_assign_expr.str_name, &v);
 
 	return 0;
 
@@ -269,8 +287,8 @@ void debug_convert_expr_type(ExprType type, char* str){
 VALUE eval_expression(Expression* expr)
 {
 
-    uint64_t left_val;
-    uint64_t right_val;
+    VALUE left_val;
+    VALUE right_val;
 
     VALUE v;
 
@@ -293,8 +311,9 @@ VALUE eval_expression(Expression* expr)
 
     //変数を参照した時の動作 変数リストをサーチして値を返す
     case IDENT_EXPRESSION:
-    	v.type = VARIABLE_INT;
-    	v.u.long_val = eval_identifier_expression(expr);
+    	//v.type = VARIABLE_INT;
+    	//v.u.long_val = eval_identifier_expression(expr);
+    	v = eval_identifier_expression(expr);
         return v;
 
     case WIDGET_EXPRESSION:
@@ -308,87 +327,98 @@ VALUE eval_expression(Expression* expr)
 
 
     case ADD_EXPRESSION:
-        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
-        right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left);
+        right_val = eval_expression(expr->u.binary_expr.right);
 
         v.type = VARIABLE_INT;
-        v.u.long_val = left_val + right_val;
+        v.u.long_val = left_val.u.long_val + right_val.u.long_val;
         return v;
 
   
     case SUB_EXPRESSION:
 
-        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
-        right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left);
+        right_val = eval_expression(expr->u.binary_expr.right);
 
         v.type = VARIABLE_INT;
-        v.u.long_val = left_val - right_val;
+        v.u.long_val = left_val.u.long_val - right_val.u.long_val;
         return v;
 
 
     case MUL_EXPRESSION:
 
-        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
-        right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left);
+        right_val = eval_expression(expr->u.binary_expr.right);
 
         v.type = VARIABLE_INT;
-        v.u.long_val = left_val * right_val;
+        v.u.long_val = left_val.u.long_val * right_val.u.long_val;
         return v;
 
 
     case DIV_EXPRESSION:
 
-        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
-        right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left);
+        right_val = eval_expression(expr->u.binary_expr.right);
 
         v.type = VARIABLE_INT;
-        v.u.long_val = left_val / right_val;
+        v.u.long_val = left_val.u.long_val / right_val.u.long_val;
         return v;
 
 
 
     case BIT_AND_EXPRESSION:
-    	left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
-	    right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
+    	left_val = eval_expression(expr->u.binary_expr.left);
+	    right_val = eval_expression(expr->u.binary_expr.right);
 
 	    v.type = VARIABLE_INT;
-	    v.u.long_val = left_val & right_val;
+	    v.u.long_val = left_val.u.long_val & right_val.u.long_val;
 	    return v;
 
     case BIT_OR_EXPRESSION:
-    	left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
- 		right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
+    	left_val = eval_expression(expr->u.binary_expr.left);
+ 		right_val = eval_expression(expr->u.binary_expr.right);
 
  		v.type = VARIABLE_INT;
- 		v.u.long_val = left_val | right_val;
+ 		v.u.long_val = left_val.u.long_val | right_val.u.long_val;
  		return v;
 
 
     case BIT_L_SHIFT_EXPRESSION:
-        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
-     	right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left);
+     	right_val = eval_expression(expr->u.binary_expr.right);
 
      	v.type = VARIABLE_INT;
-     	v.u.long_val = left_val << right_val;
+     	v.u.long_val = left_val.u.long_val << right_val.u.long_val;
      	return v;
 
 
     case BIT_R_SHIFT_EXPRESSION:
-        left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
-        right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
+        left_val = eval_expression(expr->u.binary_expr.left);
+        right_val = eval_expression(expr->u.binary_expr.right);
 
         v.type = VARIABLE_INT;
-        v.u.long_val = left_val >> right_val;
+        v.u.long_val = left_val.u.long_val >> right_val.u.long_val;
         return v;
 
 
     case EQ_EXPRESSION:
 
-    	left_val = eval_expression(expr->u.binary_expr.left).u.long_val;
-    	right_val = eval_expression(expr->u.binary_expr.right).u.long_val;
+    	left_val = eval_expression(expr->u.binary_expr.left);
+    	right_val = eval_expression(expr->u.binary_expr.right);
 
-		v.type = VARIABLE_INT;
-		v.u.long_val = (left_val == right_val) ;
+    	v.type = VARIABLE_INT;
+
+    	if (left_val.type != right_val.type) {
+    		fprintf(stderr, "error EQ_EXPRESSION, TYPE Different left and rigth\n");
+    		exit(1);
+    	}
+    	else if (left_val.type == VARIABLE_INT) {
+    		v.u.long_val = (left_val.u.long_val == right_val.u.long_val) ;
+    	}
+    	else if (left_val.type == VARIABLE_STRING) {
+
+    		v.u.long_val = (strcmp(left_val.u.str, right_val.u.str) == 0) ? 1 : 0;
+    	}
 
 		return v;
 
@@ -405,7 +435,12 @@ VALUE eval_expression(Expression* expr)
     case REGX_DECLARE:
     	/*** $data32 data_hoge という特殊変数の宣言 *********
     	* 変数リストに変数を追加。データの値はセットしない。 */
-    	add_variable_list(expr->u.reg_declare_expr.ident, NULL, VARIABLE_REGX, expr->u.reg_declare_expr.regType);
+    	//add_variable_list(expr->u.reg_declare_expr.ident, NULL, VARIABLE_REGX, expr->u.reg_declare_expr.regType);
+
+    	v.type = VARIABLE_REGX;
+    	v.u.regx.reg_type = expr->u.reg_declare_expr.regType;
+
+    	add_variable_list(expr->u.reg_declare_expr.ident, &v);
 
         return v;
 
@@ -431,7 +466,10 @@ VALUE eval_expression(Expression* expr)
     	return v;
 
     case PAGE_EXPRESSION:
-    	add_variable_list(expr->u.ident, NULL, PAGE, 0);
+
+    	v.type = PAGE;
+    	add_variable_list(expr->u.ident, &v);
+
     	return v;
 
     default:
@@ -471,7 +509,7 @@ void show_gtk_val()
 #endif
 
 /* name という変数がリストになければ新規追加。既にある場合は上書き ********/
-void add_variable_list(char* name, void* pData, ValType val_type, RegType reg_type)
+void add_variable_list(char* name, VALUE* pVal)
 {
 
 
@@ -481,7 +519,8 @@ void add_variable_list(char* name, void* pData, ValType val_type, RegType reg_ty
 	node = malloc(sizeof(VarDictList));
 
 
-	node->VarDict.val.type = val_type;
+	node->VarDict.val.type = pVal->type;
+
 
 	//変数名の領域の確保してセット
 	int str_size = strlen(name) + 1;
@@ -489,30 +528,35 @@ void add_variable_list(char* name, void* pData, ValType val_type, RegType reg_ty
 	strcpy(node->VarDict.name, name);
 
 	/*** 変数の値をセット ***************************/
-	if (val_type == VARIABLE_INT) {
-		node->VarDict.val.u.long_val = *((int*)pData);
-	}
-	else if (val_type == VARIABLE_WIDGET) {
+	if (pVal->type == VARIABLE_INT) {
 
-		Widget* p = (Widget*) pData;
+		node->VarDict.val.u.long_val = pVal->u.long_val;
+	}
+	else if (pVal->type == VARIABLE_STRING) {
+
+		node->VarDict.val.u.str = pVal->u.str;
+	}
+	else if (pVal->type == VARIABLE_WIDGET) {
+
+		//Widget* p = (Widget*) pData;
 
 		//共通の要素
-		node->VarDict.val.u.widget.type = p->type;
-		node->VarDict.val.u.widget.val = p->val;
-		node->VarDict.val.u.widget.def = p->def;
+		node->VarDict.val.u.widget.type = pVal->u.widget.type;
+		node->VarDict.val.u.widget.val = pVal->u.widget.val;
+		node->VarDict.val.u.widget.def = pVal->u.widget.def;
 
 		//SCALE Widget
-		if (p->type == SCALE_WIDGET || p->type == BUTTON_WIDGET || p->type == SPIN_WIDGET) {
+		if (pVal->u.widget.type == SCALE_WIDGET || pVal->u.widget.type == BUTTON_WIDGET || pVal->u.widget.type == SPIN_WIDGET) {
 
 			//構造体のコピー
-			node->VarDict.val.u.widget.min = p->min;
-			node->VarDict.val.u.widget.max = p->max;
-			node->VarDict.val.u.widget.shift = p->shift;
+			node->VarDict.val.u.widget.min = pVal->u.widget.min;
+			node->VarDict.val.u.widget.max = pVal->u.widget.max;
+			node->VarDict.val.u.widget.shift = pVal->u.widget.shift;
 
 		}
-		else if (p->type == COMBO_WIDGET || p->type == RADIO_WIDGET) {
-			node->VarDict.val.u.widget.str_list = p->str_list;
-			node->VarDict.val.u.widget.list_size = p->list_size;
+		else if (pVal->u.widget.type == COMBO_WIDGET || pVal->u.widget.type == RADIO_WIDGET) {
+			node->VarDict.val.u.widget.str_list = pVal->u.widget.str_list;
+			node->VarDict.val.u.widget.list_size = pVal->u.widget.list_size;
 		}
 		else {
 
@@ -523,17 +567,17 @@ void add_variable_list(char* name, void* pData, ValType val_type, RegType reg_ty
 
 	}
 	//REG32,16,64	は変数の宣言と代入が別のため、データのセットはeval_assign_expressionで実行
-	else if (val_type == VARIABLE_REGX) {
+	else if (pVal->type == VARIABLE_REGX) {
 		//ポインタをNULLで初期化しておく
 		node->VarDict.val.u.regx.data_expr = NULL;
 		node->VarDict.val.u.regx.p_gtk_label = NULL;
 
-		node->VarDict.val.u.regx.reg_type = reg_type;
+		node->VarDict.val.u.regx.reg_type = pVal->u.regx.reg_type;
 
 		//not data setting
 
 	}
-	else if (val_type == PAGE) {
+	else if (pVal->type == PAGE) {
 	    	//NOP
 	}
 	else {
