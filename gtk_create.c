@@ -15,7 +15,8 @@ GtkWidget *window;
 static GtkCellRenderer *g_renderer = NULL;  //コンボボックスの表示で使う
 static GtkWidget *g_notebook;
 
-static int g_reg_sened_stop = 0;
+static int g_reg_send_stop_0 = 0;  //
+static int g_reg_send_stop_1 = 0;  //set_default時に使用するflg
 
 
 extern VALUE* search_relative_reg_from_list(char* name);
@@ -50,7 +51,7 @@ void set_reg32(uint32_t addr, uint32_t data, int32_t misk)
 {
 
 	//printf("******* Call set_reg32 ********\n");
-	if (!g_reg_sened_stop) {
+	if (!g_reg_send_stop_0 && !g_reg_send_stop_1) {
 		printf("addr = 0x%08X, data = 0x%08X, misk = %d\n", addr, data, misk);
 	}
 
@@ -60,7 +61,7 @@ void set_reg16(uint32_t addr, uint32_t data, int32_t misk)
 {
 
 	//printf("******* Call set_reg16 ********\n");
-	if (!g_reg_sened_stop) {
+	if (!g_reg_send_stop_0 && !g_reg_send_stop_1) {
 		printf("addr = 0x%08X, data = 0x%08X, misk = %d\n", addr, data, misk);
 	}
 
@@ -70,7 +71,7 @@ void set_reg64(uint32_t addr, uint64_t data, int32_t misk)
 {
 
 	//printf("******* Call set_reg64 ********\n");
-	if (!g_reg_sened_stop) {
+	if (!g_reg_send_stop_0 && !g_reg_send_stop_1) {
 		printf("addr = 0x%08X, data = 0x%016lX, misk = %d\n", addr, data, misk);
 	}
 
@@ -155,12 +156,16 @@ static void cb_spin_changed(GtkSpinButton* spin, gpointer user_data)
 
 }
 
-/** widgetの左側のボタンが押された時にwidgetの値をdefault値に戻す **/
+/** widgetの左側のボタンが押された時にwidgetの値をdefault値に戻す **
+ *  値の変更がなくてもレジスタは送信する                          */
 static void cb_def_button_clicked(GtkButton* button, gpointer user_data)
 {
 
 	Varialbe_Dict* dict = (Varialbe_Dict*)user_data;
 
+	//レジスタの送信を強制的に止める。値の変更でcb_scale_changed() が呼ばれてレジスタが送信されるのは止める。
+	//この関数の最後で強制的にcb_scale_changed() をコールしてレジスタを送信する
+	g_reg_send_stop_0 = 1;
 
 	if (dict->val.u.widget.type == BUTTON_WIDGET) {
 		GtkButton* button = (GtkButton*)(dict->val.u.widget.p_gtk_self);
@@ -171,19 +176,15 @@ static void cb_def_button_clicked(GtkButton* button, gpointer user_data)
 		//default値セット
 		gtk_button_set_label(button, str_new_val);
 
-		//変数リストの値が変更がある場合は更新
-		//ボタンだけが他と違う。状態を持っていないため。自分で変更があったかをチェック
-		if (dict->val.u.widget.val != dict->val.u.widget.def) {
-			dict->val.u.widget.val = dict->val.u.widget.def;
-			change_widget_value(dict);
-		}
+		dict->val.u.widget.val = dict->val.u.widget.def;
+
 	}
 	else if (dict->val.u.widget.type == SCALE_WIDGET){
 		GtkScale* scale = (GtkScale*)(dict->val.u.widget.p_gtk_self);
 		gtk_range_set_value(GTK_RANGE(scale), dict->val.u.widget.def);
 
 		//gtk_range_set_value() をよぶことで値が変更してcb_scale_changed が呼ばれるので
-		//ボタンWidgetのように手動で値の変更を判定する必要はない
+
 	}
 	else if (dict->val.u.widget.type == SPIN_WIDGET){
 		GtkSpinButton* spin = (GtkSpinButton*)(dict->val.u.widget.p_gtk_self);
@@ -203,6 +204,12 @@ static void cb_def_button_clicked(GtkButton* button, gpointer user_data)
 		fprintf(stderr, "error cb_def_button_clicked, unknown widget\n");
 		exit(1);
 	}
+
+
+	/** レジスタを強制送信(変化がなくても送信する) ***/
+	g_reg_send_stop_0 = 0;
+
+	change_widget_value(dict);
 
 }
 
@@ -287,7 +294,7 @@ static void set_register(uint32_t addr, uint64_t data, int32_t misk, RegType reg
 	if (reg_type & (REG32 | REG32R)) {
 		set_reg32(addr, data, misk);
 	} else if (reg_type & (REG64 | REG64R)) {
-		set_reg32(addr, data, misk);
+		set_reg64(addr, data, misk);
 	} else if (reg_type & (REG16 | REG16R)) {
 		set_reg16(addr, data, misk);
 	}
@@ -744,7 +751,7 @@ void set_default_all()
 	VarDictList* pos;
 
 	//register送信を止める Widgetを初期値に戻した時にレジスタが送信されるのを防止するため
-	g_reg_sened_stop = 1;
+	g_reg_send_stop_1 = 1;
 
 	//Widgetを初期値に戻す(初期値に戻すボタンのコールバック関数を呼ぶ)
 	for (pos = g_VarDictList; pos != NULL; pos = pos->next) {
@@ -756,7 +763,7 @@ void set_default_all()
 		}
 	}
 
-	g_reg_sened_stop = 0;
+	g_reg_send_stop_1 = 0;
 
 
 	//レジスタ値を送信
@@ -780,7 +787,7 @@ void set_default_page(int page_num) {
 	int page = -1;
 
 	//register送信を止める Widgetを初期値に戻した時にレジスタが送信されるのを防止するため
-	g_reg_sened_stop = 1;
+	g_reg_send_stop_1 = 1;
 
 	for (pos = g_VarDictList; pos != NULL; pos = pos->next) {
 
@@ -806,7 +813,7 @@ void set_default_page(int page_num) {
 
 	}
 
-	g_reg_sened_stop = 0;
+	g_reg_send_stop_1 = 0;
 	page = -1;
 
 	//レジスタ値を送信
