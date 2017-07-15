@@ -144,21 +144,24 @@ typedef struct {
 	struct Expression_tag *expr_shift;
 } ScaleWidgetAssignExpr;
 
-/*
-typedef enum {
-	COMBO_ENUM = 1,
-	RADIO_ENUM
-}EnumWidgetType;
-*/
+
+
+
+typedef struct ExprList_tag {
+
+	struct Expression_tag *expression;
+    struct ExprList_tag *next;
+
+} ExprList;
+
 typedef struct {
 	widgetType widget_type;  //COMBO_WIDGET or RADIO_WIDGET
 	char *str_name;
 	int list_size;
-	char* len_val_list[20];   //要素の最大は20とする
+	ExprList* expr_list;
 	int def;
 
 } EnumWidgetAssignExpr;
-
 
 typedef struct {
 	char *ident;
@@ -245,7 +248,7 @@ Expression* ktu_create_minus_expression(Expression* operand);
 Expression* ktu_create_declare_expression(char* str, RegType type);
 Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
 Expression* ktu_create_assign_spin_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
-Expression* ktu_create_assign_enum_widget(char* ident, widgetType type);
+Expression* ktu_create_assign_enum_widget(ExprList* expr_list ,char* ident, widgetType type);
 
 Statement* ktu_create_if_statement(Expression* condition, StatementList* true_stmt_list, Elsif* elsif, StatementList* else_stmt_list);
 Elsif* ktu_create_elsif(Expression *expr, StatementList* stmt_list);
@@ -260,9 +263,9 @@ StatementList* ktu_create_statement_list(Statement* statement);
 
 StatementList* ktu_chain_statement_list(StatementList* list, Statement* statement);
 
-void ktu_create_valiable_length_val(Expression* expr);
+ExprList* ktu_create_exression_list(Expression* expr);
 
-void ktu_add_valiable_length_val(Expression* expr);
+ExprList* ktu_chain_expression_list(ExprList* expr_list,Expression* expr);
 
 VALUE eval_expression(Expression* expr);
 

@@ -227,13 +227,52 @@ int eval_enum_widet_assign_expression(Expression* expr)
 
 
 	Widget widgetData;
-
 	widgetData.type = expr->u.enum_widget_assign_expr.widget_type;
-	widgetData.str_list = expr->u.enum_widget_assign_expr.len_val_list;
+
 	widgetData.list_size = expr->u.enum_widget_assign_expr.list_size;
-	widgetData.def = expr->u.enum_widget_assign_expr.def;
+
+	widgetData.str_list = malloc(sizeof(char*) * widgetData.list_size);
+
+
+	//exprを評価して文字列をlistを作成
+	ExprList* pos;
+
+	int i = 0;
+	int def_flg = 0;
+	VALUE eval_value;
+
+	for (pos = expr->u.enum_widget_assign_expr.expr_list; pos != NULL; pos = pos->next) {
+
+
+		eval_value = eval_expression(pos->expression);
+
+		//整数値はdefault指定と判断
+		if (eval_value.type == VARIABLE_INT) {
+
+			widgetData.def = eval_value.u.long_val;
+			def_flg = 1;
+			break;
+		}
+		else if (eval_value.type == VARIABLE_STRING) {
+			widgetData.str_list[i++] = eval_value.u.str;
+		}
+		else {
+			fprintf(stderr, "error eval_enum_widet_assign_expression, line near %d\n", pos->expression->line_number);
+			exit(1);
+		}
+	}
+
+	widgetData.list_size = i;
+
+	//デフォルトの指定がない時
+	if (def_flg == 0) {
+
+		widgetData.def = 0;
+	}
 
 	widgetData.val = widgetData.def; //ここではvalの値はdefをいれておく
+
+
 
 	VALUE v;
 	v.type = VARIABLE_WIDGET;

@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -296,86 +297,65 @@ Expression* ktu_create_page(char* ident)
 
 }
 
-char* g_len_val_lsit[20];
-int g_len_val_size = 0;
-int g_list_def = 0;
 
-/** 可変長リストの作成 *********/
-void ktu_create_valiable_length_val(Expression* expr)
+ExprList* ktu_create_expression_list(Expression* expr)
 {
 
-	if (expr->type == STRING_EXPRESSION) {
-		g_len_val_lsit[0] = expr->u.ident;
-		g_len_val_size = 1;
-		g_list_def = 0;
-	}
-	else if (expr->type == IDENT_EXPRESSION) {
-		fprintf(stderr, "syntax error, line near : %d, IDENT_EXPRESSION not yet implemented\n", expr->line_number);
-		exit(1);
-	}
-	else {
-		fprintf(stderr, "syntax error, line near : %d\n", expr->line_number);
-		exit(1);
-	}
-}
 
-/** 可変長リストへ追加 *********/
-/* 文字列か整数型かでdefault設定を判断 */
-void ktu_add_valiable_length_val(Expression* expr)
-{
-
-	//個数の最大値のエラーチェック
-	if (g_len_val_size > 19) {
-		fprintf(stderr, "error ktu_add_valiable_length_val(), over 20\n");
+	//error check
+	if (!(expr->type == STRING_EXPRESSION || expr->type == IDENT_EXPRESSION)) {
+		fprintf(stderr, "syntax error, line near : %d, allow STRING_EXPRESSION or IDENT_EXPRESSION \n", expr->line_number);
 		exit(1);
 	}
 
-	if (expr->type == STRING_EXPRESSION) {
 
-		g_len_val_lsit[g_len_val_size] = expr->u.ident;
-		g_len_val_size++;
-		printf("add_valiable_length_val = %d\n", expr->u.int_value);
-	}
-	//INT型はdefault指定と解釈
-	else if (expr->type == INT_EXPRESSION) {
-		if (expr->u.int_value < g_len_val_size) {
-			g_list_def = expr->u.int_value;
-		}
-		else {
-			fprintf(stderr, "error, line near :%d, def_val=%d is over list size\n", expr->line_number, expr->u.int_value);
-			fprintf(stderr, "set def_val = 0-%d\n", g_len_val_size-1);
-			exit(1);
-		}
-	}
+	//listを作成
+	ExprList* list = (ExprList*)malloc(sizeof(ExprList));
+	list->expression = expr;
+	list->next = NULL;
 
+
+	return list;
 
 }
 
-Expression* ktu_create_assign_enum_widget(char* ident, widgetType type)
+
+ExprList* ktu_chain_expression_list(ExprList* expr_list, Expression* expr)
+{
+
+	ExprList* pos;
+
+
+	pos = expr_list;
+
+	//リストの末尾を探す
+	while (pos->next != NULL) {
+
+		pos = pos->next;
+	}
+
+	ExprList* list = (ExprList*) malloc(sizeof(ExprList));
+	list->expression = expr;
+	list->next = NULL;
+
+	//add list
+	pos->next = list;
+
+
+	return expr_list;
+	
+}
+
+Expression* ktu_create_assign_enum_widget(ExprList* expr_list ,char* ident, widgetType type)
 {
 
 	Expression* expr;
 	expr = ktu_alloc_expression(ENUM_WIDGET_ASSIGN_EXPRESSION);
 
-	//可変長リストの領域を確保(グローバル変数からコピー)
-	int i;
-	for (i = 0; i < g_len_val_size; i++) {
-
-		expr->u.enum_widget_assign_expr.len_val_list[i] = malloc(strlen(g_len_val_lsit[i])+1);
-
-		strcpy(expr->u.enum_widget_assign_expr.len_val_list[i], g_len_val_lsit[i]);
-		printf("g_len_val_lsit = %s\n", expr->u.enum_widget_assign_expr.len_val_list[i]);
-
-	}
-
 	expr->u.enum_widget_assign_expr.widget_type = type;
-	expr->u.enum_widget_assign_expr.list_size = g_len_val_size;
 	expr->u.enum_widget_assign_expr.str_name = ident;
-	expr->u.enum_widget_assign_expr.def = g_list_def;
+	expr->u.enum_widget_assign_expr.expr_list = expr_list;
 
 	return expr;
 }
-
-
-
 

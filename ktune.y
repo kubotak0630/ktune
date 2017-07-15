@@ -11,6 +11,7 @@ extern StatementList* g_st_list;
 %union {
     char *ident;
     Expression *expr;
+    ExprList *expr_list;
     Statement *stmt;
     StatementList *stmt_list;
     Elsif *elsif;
@@ -32,6 +33,7 @@ extern StatementList* g_st_list;
 %type <stmt> statement if_statement expression_statement block_item
 %type <stmt_list> statement_list block_item_list block
 %type <elsif> elsif_item elsif_list
+%type <expr_list> valiable_list
 
 %left BIT_AND BIT_OR
 %nonassoc EQ
@@ -296,7 +298,7 @@ page_create
 widget_combo_assign
   : IDENT ASSIGN C_LBR valiable_list RBR
   {
-  	$$ = ktu_create_assign_enum_widget($1, COMBO_WIDGET);
+  	$$ = ktu_create_assign_enum_widget($4, $1, COMBO_WIDGET);
   }
   ;
 
@@ -304,18 +306,18 @@ widget_combo_assign
 widget_radio_assign
   : IDENT ASSIGN R_LBR valiable_list RBR
   {
-  	$$ = ktu_create_assign_enum_widget($1, RADIO_WIDGET);
+  	$$ = ktu_create_assign_enum_widget($4, $1, RADIO_WIDGET);
   }
   ;
 
 
 valiable_list
   : calc_expr {
-    ktu_create_valiable_length_val($1);
+    $$ = ktu_create_expression_list($1);
   }
   | valiable_list COMMA calc_expr
   {
-    ktu_add_valiable_length_val($3);
+    $$ = ktu_chain_expression_list($1, $3);
   }
   ;
 
