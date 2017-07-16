@@ -177,7 +177,7 @@ typedef struct Expression_tag {
         char* ident;
         AssignExpr assign_expr;
         BinaryExpr binary_expr;
-        struct Expression_tag *minus_expr;
+        struct Expression_tag *operand_expr;
         ScaleWidgetAssignExpr scale_widget_assign_expr;
         EnumWidgetAssignExpr enum_widget_assign_expr;
         RegDeclareExpr reg_declare_expr;
@@ -255,7 +255,7 @@ Elsif* ktu_create_elsif(Expression *expr, StatementList* stmt_list);
 Elsif* ktu_chain_elsif_list(Elsif* list, Elsif* add);
 
 
-Expression* ktu_create_page(char* ident);
+Expression* ktu_create_page(Expression* expr_ope);
 
 
 Statement* ktu_create_expression_statement(Expression* expr);

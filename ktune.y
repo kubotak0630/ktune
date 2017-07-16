@@ -288,7 +288,7 @@ widget_spin_assign
  
  
 page_create
-  : GTK_PAGE IDENT
+  : GTK_PAGE calc_expr
   {
       $$ = ktu_create_page($2);
   }

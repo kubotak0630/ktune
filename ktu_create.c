@@ -228,7 +228,7 @@ Expression* ktu_create_minus_expression(Expression* operand)
     Expression* expr;
     
     expr = ktu_alloc_expression(MINUS_EXPRESSION);
-    expr->u.minus_expr = operand;
+    expr->u.operand_expr = operand;
     
     return expr;
 
@@ -285,12 +285,12 @@ Expression* ktu_create_assign_spin_widget(char* ident, Expression* a1, Expressio
 }
 
 
-Expression* ktu_create_page(char* ident)
+Expression* ktu_create_page(Expression* expr_ope)
 {
 	Expression* expr;
 
 	expr = ktu_alloc_expression(PAGE_EXPRESSION);
-	expr->u.ident = ident;
+	expr->u.operand_expr = expr_ope;
 
 
 	return expr;

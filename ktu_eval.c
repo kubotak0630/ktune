@@ -331,6 +331,7 @@ VALUE eval_expression(Expression* expr)
 
     VALUE v;
 
+    char* str_name;
 
     //char str[32];
     //debug_convert_expr_type(expr->type, str);
@@ -466,7 +467,7 @@ VALUE eval_expression(Expression* expr)
     case MINUS_EXPRESSION:
 
     	v.type = VARIABLE_INT;
-    	v.u.long_val = eval_minus_expression(expr->u.minus_expr);
+    	v.u.long_val = eval_minus_expression(expr->u.operand_expr);
     	return v;
 
 
@@ -507,7 +508,13 @@ VALUE eval_expression(Expression* expr)
     case PAGE_EXPRESSION:
 
     	v.type = PAGE;
-    	add_variable_list(expr->u.ident, &v);
+
+    	str_name = eval_expression(expr->u.operand_expr).u.str;
+
+    	printf("---%s \n", str_name);
+
+
+    	add_variable_list(str_name, &v);
 
     	return v;
 
