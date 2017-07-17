@@ -64,11 +64,9 @@ int eval_assign_expression(char* ident, int is_register_flg, Expression* expr)
     //INT型 or STRING 変数への代入
     if (is_register_flg == 0) {
 
-
     	//ret_val = eval_expression(expr).u.long_val;
     	v = eval_expression(expr);
 
-    	//add_variable_list(ident, (void*)&(v.u.long_val), VARIABLE_INT, 0);
     	add_variable_list(ident, &v);
 
     }
@@ -286,6 +284,84 @@ int eval_enum_widet_assign_expression(Expression* expr)
 
 }
 
+//linuxではitoaが使えないので自作(Webからコピペ)
+char *itoa(int val, char *a, int radix) {
+	char *p = a;
+	unsigned int v = val;/* 作業用(変換対象の値) */
+	int n = 1;/* 変換文字列の桁数記憶用 */
+	while (v >= radix) {/* 桁数を求める */
+		v /= radix;
+		n++;
+	}
+	p = a + n; /* 最下位の位置から設定する */
+	v = val;
+	*p = '\0';/* 文字列終端の設定 */
+	do {
+		--p;
+		*p = v % radix + '0';/* 1桁の数値を文字に変換 */
+		if (*p > '9') {/* 変換した文字が10進で表現できない場合 */
+			*p = v % radix - 10 + 'A'; /* アルファベットを使う */
+		}
+		v /= radix;
+	} while (p != a);
+	return a;
+}
+
+
+/** INT とSTRINGに対応 *****/
+VALUE eval_add_expression(Expression *expr_left, Expression* expr_right) {
+
+	VALUE ret_val, left_val, right_val;
+
+	left_val = eval_expression(expr_left);
+	right_val = eval_expression(expr_right);
+
+	if (left_val.type == VARIABLE_INT && right_val.type == VARIABLE_INT) {
+		ret_val.type = VARIABLE_INT;
+		ret_val.u.long_val = left_val.u.long_val + right_val.u.long_val;
+	}
+	else if (left_val.type == VARIABLE_STRING && right_val.type ==VARIABLE_STRING) {
+		ret_val.type = VARIABLE_STRING;
+
+		char* new_str = malloc(strlen(left_val.u.str) + strlen(right_val.u.str) + 1);
+
+		strcpy(new_str, left_val.u.str);
+		strcat(new_str, right_val.u.str);
+
+		ret_val.u.str = new_str;
+
+	}
+	//文字列と整数型の足し算は整数型を文字列に自動的にCASTする仕様
+	else {
+
+		ret_val.type = VARIABLE_STRING;
+
+		char buffer[33];
+		char* new_str;
+
+		if (left_val.type == VARIABLE_INT) {
+			itoa(left_val.u.long_val, buffer, 10);
+			new_str = malloc(strlen(buffer) + strlen(right_val.u.str) + 1);
+
+			strcpy(new_str, buffer);
+			strcat(new_str, right_val.u.str);
+
+		} else {
+			itoa(right_val.u.long_val, buffer, 10);
+			new_str = malloc(strlen(buffer) + strlen(left_val.u.str) + 1);
+
+			strcpy(new_str, left_val.u.str);
+			strcat(new_str, buffer);
+		}
+
+
+		ret_val.u.str = new_str;
+	}
+
+	return ret_val;
+}
+
+
 void debug_convert_expr_type(ExprType type, char* str){
 
     switch (type) {
@@ -360,21 +436,19 @@ VALUE eval_expression(Expression* expr)
 
     	return v;
 
+    //INT型とSTRING型の両方がここ 戻り値のvはほとんど意味がないが代入した値を返す仕様とする
     case ASSIGN_EXPRESSION:
-    	v.type = VARIABLE_INT;
+    	//v.type = VARIABLE_INT;
     	v.u.long_val = eval_assign_expression(expr->u.assign_expr.variable, expr->u.assign_expr.is_register_flg, expr->u.assign_expr.operand);
     	return v;
 
 
     case ADD_EXPRESSION:
-        left_val = eval_expression(expr->u.binary_expr.left);
-        right_val = eval_expression(expr->u.binary_expr.right);
 
-        v.type = VARIABLE_INT;
-        v.u.long_val = left_val.u.long_val + right_val.u.long_val;
+        v = eval_add_expression(expr->u.binary_expr.left, expr->u.binary_expr.right);
+
         return v;
 
-  
     case SUB_EXPRESSION:
 
         left_val = eval_expression(expr->u.binary_expr.left);

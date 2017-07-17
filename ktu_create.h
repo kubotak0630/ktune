@@ -263,7 +263,7 @@ StatementList* ktu_create_statement_list(Statement* statement);
 
 StatementList* ktu_chain_statement_list(StatementList* list, Statement* statement);
 
-ExprList* ktu_create_exression_list(Expression* expr);
+ExprList* ktu_create_expression_list(Expression* expr);
 
 ExprList* ktu_chain_expression_list(ExprList* expr_list,Expression* expr);
 
