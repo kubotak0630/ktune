@@ -57,6 +57,10 @@ int yywrap(void)
   return IDENT_MEMBER;
 }
 
+<INITIAL>\.[A-Za-z][A-Za-z_0-9]* {
+  yylval.ident = alloc_string(yytext);
+  return MEMBER;
+}
 
 <INITIAL>[A-Za-z][A-Za-z_0-9]* {
   yylval.ident = alloc_string(yytext);

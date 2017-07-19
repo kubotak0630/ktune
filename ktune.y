@@ -23,24 +23,25 @@ extern StatementList* g_st_list;
 //%token <expression> INT_LITERAL
 %token <int_value> INT_LITERAL 
 %token <ident> STRING_LITERAL
-%token <ident> IDENT IDENT_MEMBER
+%token <ident> IDENT IDENT_MEMBER MEMBER
 //token <ident> WIDGET_SCALE_LITERAL
 %token IF ELSE ELSIF ADD SUB MUL DIV LP RP LC RC ASSIGN EQ BIT_AND BIT_OR BIT_L_SHIFT BIT_R_SHIFT
 %token C_LBR R_LBR SPIN_LBR LBR RBR COMMA
 %token REG_DATA16 REG_DATA32 REG_DATA64 REG_DATA16R REG_DATA32R REG_DATA64R GTK_PAGE
-%type <expr> calc_expr expression primary register_declare  page_create 
+%type <expr> calc_expr expression primary register_declare  page_create member_assign struct_member_block_assign
 %type <expr> widget_scalse_assign widget_combo_assign widget_radio_assign widget_spin_assign
 %type <stmt> statement if_statement expression_statement block_item
 %type <stmt_list> statement_list block_item_list block
 %type <elsif> elsif_item elsif_list
-%type <expr_list> valiable_list
+%type <expr_list> valiable_list member_assign_list
 
 %left BIT_AND BIT_OR
 %nonassoc EQ
-left BIT_L_SHIFT BIT_R_SHIFT
+%left BIT_L_SHIFT BIT_R_SHIFT
 %left ADD SUB
 %left MUL DIV
-%right UMINUS  //マイナス単項演算子
+%left UMINUS
+
 
 
 %%
@@ -163,6 +164,7 @@ expression
   | page_create
   | widget_combo_assign
   | widget_radio_assign
+  | struct_member_block_assign
   ;
 
 
@@ -206,6 +208,14 @@ calc_expr
   {
     $$ = ktu_create_binary_expression(EQ_EXPRESSION, $1, $3);
   }
+  | SUB calc_expr %prec UMINUS
+  {
+    $$ = ktu_create_minus_expression($2);
+  }
+  | LP calc_expr RP 
+  { 
+      $$ = $2;
+  }
   ;
 
 primary
@@ -223,15 +233,14 @@ primary
       $$ = ktu_create_identifier_expression($1);
       printf("create_identifier_expression: %s\n", $1);
   }
-  | LP calc_expr RP 
-  { 
-      $$ = $2;
-  }
-  | SUB calc_expr %prec UMINUS
-
-  { 
-      $$ = ktu_create_minus_expression($2);
-  }
+//  | LP calc_expr RP 
+//  { 
+//      $$ = $2;
+//  }
+//  | SUB calc_expr %prec UMINUS
+//  { 
+//      $$ = ktu_create_minus_expression($2);
+//  }
   ;
 
 register_declare
@@ -322,7 +331,31 @@ valiable_list
   ;
 
 
-  
+//構造体のブロック初期化代入
+struct_member_block_assign
+  : REG_DATA32 IDENT ASSIGN LC member_assign_list RC
+  {
+    printf("*** member_block_assign ******\n");
+    $$ = ktu_create_sturct_init_assign_expression($5, $2);
+  }
+
+member_assign_list
+  : member_assign {
+  	$$ = ktu_create_expression_list($1);
+  }
+  | member_assign_list member_assign {
+    $$ = ktu_chain_expression_list($1, $2);
+  }
+  ;
+
+//.data = expr
+member_assign
+  : MEMBER ASSIGN calc_expr {
+  	printf("****** member_assign %s ***********\n", $1);
+  	$$ = ktu_create_assign_expression($1, $3, 0);
+  }
+  ;
+
 
 %%
 int yyerror(char const *str)

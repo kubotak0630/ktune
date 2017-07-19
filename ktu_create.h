@@ -99,9 +99,10 @@ typedef struct VarDictList_tag {
 typedef enum {
     INT_EXPRESSION = 1,
 	STRING_EXPRESSION,  //"hoge"
-    IDENT_EXPRESSION, // variable "a" 
+    IDENT_EXPRESSION, //  変数を参照した時
 	WIDGET_EXPRESSION, //[0,10,0,0]
     ASSIGN_EXPRESSION,  // "="
+	ASSIGN_STRUCT_INIT_EXPRESSION,   //構造体の初期化
     ADD_EXPRESSION,     // "+"
     SUB_EXPRESSION,     // "-"
     MUL_EXPRESSION,     // "*"
@@ -163,6 +164,13 @@ typedef struct {
 
 } EnumWidgetAssignExpr;
 
+
+typedef struct {
+	char* str_name;
+	ExprList* expr_list;
+} AssignStructInitExpr;
+
+
 typedef struct {
 	char *ident;
 	RegType regType;
@@ -181,6 +189,7 @@ typedef struct Expression_tag {
         ScaleWidgetAssignExpr scale_widget_assign_expr;
         EnumWidgetAssignExpr enum_widget_assign_expr;
         RegDeclareExpr reg_declare_expr;
+        AssignStructInitExpr assign_struct_init_expr;
 
     } u;
 
@@ -249,6 +258,7 @@ Expression* ktu_create_declare_expression(char* str, RegType type);
 Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
 Expression* ktu_create_assign_spin_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
 Expression* ktu_create_assign_enum_widget(ExprList* expr_list ,char* ident, widgetType type);
+Expression* ktu_create_sturct_init_assign_expression(ExprList* expr_list, char* ident);
 
 Statement* ktu_create_if_statement(Expression* condition, StatementList* true_stmt_list, Elsif* elsif, StatementList* else_stmt_list);
 Elsif* ktu_create_elsif(Expression *expr, StatementList* stmt_list);

@@ -4,6 +4,7 @@
 
 #include "ktu_create.h"
 
+extern int g_line_number;
 
 int g_search_bingo = 0;
 char g_search_str[64];
@@ -73,10 +74,11 @@ int eval_assign_expression(char* ident, int is_register_flg, Expression* expr)
     //REGX型のメンバ変数への代入
     else {
 
+    	//hoge.dataを str0="hoge2, str_mem="data"と分離する
 		str_split(ident, str0, str_mem);
 
-		printf("bunri_ident = %s\n", str0);
-		printf("mem = %s\n", str_mem);
+		//printf("bunri_ident = %s\n", str0);
+		//printf("mem = %s\n", str_mem);
 
 		/* .dataはexpressin(構文木)のアドレスを保存する。*/
 		if (strcmp(str_mem, "data") == 0) {
@@ -99,6 +101,59 @@ int eval_assign_expression(char* ident, int is_register_flg, Expression* expr)
     
 
     return ret_val;
+
+}
+
+
+VALUE eval_assign_struct_init_expression(AssignStructInitExpr* sturct_init_expr)
+{
+	VALUE v;
+
+	ExprList* pos;
+	Expression* expr;
+	char* str_member;
+
+
+
+	//変数を宣言
+	//エラーのライン数を無理矢理あわせる。暫定対策
+	g_line_number = sturct_init_expr->expr_list->expression->line_number;
+
+	expr = ktu_create_declare_expression(sturct_init_expr->str_name, REG32);
+	eval_expression(expr);
+
+	//メンバを代入
+	for (pos = sturct_init_expr->expr_list; pos != NULL; pos = pos->next) {
+
+		//v = eval_expression(pos->expression);
+		printf("mem = %s\n", pos->expression->u.assign_expr.variable);
+
+		//メンバーのエラーチェック
+		str_member = pos->expression->u.assign_expr.variable;
+		if (strcmp(str_member, ".data") != 0 && strcmp(str_member, ".addr") != 0 && strcmp(str_member, ".misk") != 0) {
+
+			fprintf(stderr, "member should data or addr or misk\n");
+			fprintf(stderr, "error line near %d\n", pos->expression->line_number);
+			exit(1);
+		}
+
+		//.dataを hoge.dataに変換
+		char* str_temp;
+
+
+		str_temp = malloc(strlen(sturct_init_expr->str_name)+ strlen(str_member) + 1);
+		strcpy(str_temp, sturct_init_expr->str_name);
+		strcat(str_temp, str_member);
+
+
+		expr = ktu_create_assign_expression(str_temp, pos->expression->u.assign_expr.operand, 1);
+		eval_expression(expr);
+
+	}
+
+
+	return v;
+
 
 }
 
@@ -354,7 +409,6 @@ VALUE eval_add_expression(Expression *expr_left, Expression* expr_right) {
 			strcat(new_str, buffer);
 		}
 
-
 		ret_val.u.str = new_str;
 	}
 
@@ -440,6 +494,11 @@ VALUE eval_expression(Expression* expr)
     case ASSIGN_EXPRESSION:
     	//v.type = VARIABLE_INT;
     	v.u.long_val = eval_assign_expression(expr->u.assign_expr.variable, expr->u.assign_expr.is_register_flg, expr->u.assign_expr.operand);
+    	return v;
+
+    case ASSIGN_STRUCT_INIT_EXPRESSION:
+
+    	eval_assign_struct_init_expression(&(expr->u.assign_struct_init_expr));
     	return v;
 
 
@@ -873,41 +932,7 @@ VALUE* search_relative_reg_from_list(char* name)
 
 }
 
-/*
-void execute_statement(Statement* statement)
-{
 
-    printf("\nstart execute_statement\n");
-
-    switch (statement->type) {
-    case EXPRESSION_STATEMENT:
-        printf("EXPRESSION_STATEMENT\n");
-        eval_expression(statement->u.expr_s);
-        break;
-    
-    default: 
-        printf("execute_statement error\n");
-    }
-
-}
-
-
-void execute_statement_list(StatementList* list)
-{
-
-    StatementList* pos;
-
-    if (list == NULL) {
-        printf("execute_statement_list() error, list is NULL\n");
-        exit(1);
-    }
-
-    for (pos = list; pos != NULL; pos = pos->next) {
-        execute_statement(pos->statement);
-    }
-
-}
-*/
 char* alloc_string(char *str)
 {
     char* new_str;

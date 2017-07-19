@@ -302,12 +302,13 @@ ExprList* ktu_create_expression_list(Expression* expr)
 {
 
 
+	/*
 	//error check
 	if (!(expr->type == STRING_EXPRESSION || expr->type == IDENT_EXPRESSION)) {
 		fprintf(stderr, "syntax error, line near : %d, allow STRING_EXPRESSION or IDENT_EXPRESSION \n", expr->line_number);
 		exit(1);
 	}
-
+	*/
 
 	//listを作成
 	ExprList* list = (ExprList*)malloc(sizeof(ExprList));
@@ -357,5 +358,18 @@ Expression* ktu_create_assign_enum_widget(ExprList* expr_list ,char* ident, widg
 	expr->u.enum_widget_assign_expr.expr_list = expr_list;
 
 	return expr;
+}
+
+Expression* ktu_create_sturct_init_assign_expression(ExprList* expr_list, char* ident)
+{
+
+	Expression* expr;
+	expr = ktu_alloc_expression(ASSIGN_STRUCT_INIT_EXPRESSION);
+
+	expr->u.assign_struct_init_expr.expr_list = expr_list;
+	expr->u.assign_struct_init_expr.str_name = ident;
+
+	return expr;
+
 }
 
