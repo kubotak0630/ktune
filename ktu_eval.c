@@ -105,6 +105,15 @@ int eval_assign_expression(char* ident, int is_register_flg, Expression* expr)
 }
 
 
+/***********************************************************
+ * $reg32 hoge
+ * hoge.addr = aaa
+ * hoge.data = bbb
+ *
+ * と記述した時と同じになるように
+ * 宣言 ktu_create_declare_expression()
+ * 代入 ktu_create_assign_expression() をコールしている
+ ************************************************************/
 VALUE eval_assign_struct_init_expression(AssignStructInitExpr* sturct_init_expr)
 {
 	VALUE v;
@@ -115,11 +124,12 @@ VALUE eval_assign_struct_init_expression(AssignStructInitExpr* sturct_init_expr)
 
 
 
-	//変数を宣言
-	//エラーのライン数を無理矢理あわせる。暫定対策
-	g_line_number = sturct_init_expr->expr_list->expression->line_number;
 
-	expr = ktu_create_declare_expression(sturct_init_expr->str_name, REG32);
+	//エラーのライン数を無理矢理あわせる。暫定対策
+	//g_line_number = sturct_init_expr->expr_list->expression->line_number;
+
+	//変数を宣言
+	expr = ktu_create_declare_expression(sturct_init_expr->str_name, sturct_init_expr->reg_type);
 	eval_expression(expr);
 
 	//メンバを代入

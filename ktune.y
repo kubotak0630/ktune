@@ -246,7 +246,6 @@ primary
 register_declare
   : REG_DATA16 IDENT
   {
-
       $$ = ktu_create_declare_expression($2, REG16);
       printf("data16_declare\n"); 
   }
@@ -262,7 +261,6 @@ register_declare
   }
   | REG_DATA16R IDENT
   {
-
       $$ = ktu_create_declare_expression($2, REG16R);
       printf("data16r_declare\n"); 
   }
@@ -333,11 +331,36 @@ valiable_list
 
 //構造体のブロック初期化代入
 struct_member_block_assign
-  : REG_DATA32 IDENT ASSIGN LC member_assign_list RC
+  : REG_DATA16 IDENT ASSIGN LC member_assign_list RC
   {
     printf("*** member_block_assign ******\n");
-    $$ = ktu_create_sturct_init_assign_expression($5, $2);
+    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG16);
   }
+  | REG_DATA32 IDENT ASSIGN LC member_assign_list RC
+  {
+    printf("*** member_block_assign ******\n");
+    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG32);
+  }
+  | REG_DATA64 IDENT ASSIGN LC member_assign_list RC
+  {
+    printf("*** member_block_assign ******\n");
+    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG64);
+  }
+  | REG_DATA16R IDENT ASSIGN LC member_assign_list RC
+  {
+    printf("*** member_block_assign ******\n");
+    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG16R);
+  }
+  | REG_DATA32R IDENT ASSIGN LC member_assign_list RC
+  {
+    printf("*** member_block_assign ******\n");
+    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG32R);
+  }
+  | REG_DATA64R IDENT ASSIGN LC member_assign_list RC
+  {
+    printf("*** member_block_assign ******\n");
+    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG64R);
+  };
 
 member_assign_list
   : member_assign {

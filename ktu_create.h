@@ -167,6 +167,7 @@ typedef struct {
 
 typedef struct {
 	char* str_name;
+	RegType reg_type;
 	ExprList* expr_list;
 } AssignStructInitExpr;
 
@@ -258,7 +259,7 @@ Expression* ktu_create_declare_expression(char* str, RegType type);
 Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
 Expression* ktu_create_assign_spin_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
 Expression* ktu_create_assign_enum_widget(ExprList* expr_list ,char* ident, widgetType type);
-Expression* ktu_create_sturct_init_assign_expression(ExprList* expr_list, char* ident);
+Expression* ktu_create_sturct_init_assign_expression(ExprList* expr_list, char* ident, RegType reg_type);
 
 Statement* ktu_create_if_statement(Expression* condition, StatementList* true_stmt_list, Elsif* elsif, StatementList* else_stmt_list);
 Elsif* ktu_create_elsif(Expression *expr, StatementList* stmt_list);

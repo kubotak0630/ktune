@@ -360,7 +360,7 @@ Expression* ktu_create_assign_enum_widget(ExprList* expr_list ,char* ident, widg
 	return expr;
 }
 
-Expression* ktu_create_sturct_init_assign_expression(ExprList* expr_list, char* ident)
+Expression* ktu_create_sturct_init_assign_expression(ExprList* expr_list, char* ident, RegType reg_type)
 {
 
 	Expression* expr;
@@ -368,6 +368,7 @@ Expression* ktu_create_sturct_init_assign_expression(ExprList* expr_list, char* 
 
 	expr->u.assign_struct_init_expr.expr_list = expr_list;
 	expr->u.assign_struct_init_expr.str_name = ident;
+	expr->u.assign_struct_init_expr.reg_type = reg_type;
 
 	return expr;
 
