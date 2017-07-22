@@ -27,7 +27,7 @@ extern StatementList* g_st_list;
 //token <ident> WIDGET_SCALE_LITERAL
 %token IF ELSE ELSIF ADD SUB MUL DIV LP RP LC RC ASSIGN EQ BIT_AND BIT_OR BIT_L_SHIFT BIT_R_SHIFT
 %token C_LBR R_LBR SPIN_LBR LBR RBR COMMA
-%token REG_DATA16 REG_DATA32 REG_DATA64 REG_DATA16R REG_DATA32R REG_DATA64R GTK_PAGE
+%token REG_DATA16 REG_DATA32 REG_DATA64 REG_DATA16B REG_DATA32B REG_DATA64B GTK_PAGE
 %type <expr> calc_expr expression primary register_declare  page_create member_assign struct_member_block_assign
 %type <expr> widget_scalse_assign widget_combo_assign widget_radio_assign widget_spin_assign
 %type <stmt> statement if_statement expression_statement block_item
@@ -259,19 +259,19 @@ register_declare
       $$ = ktu_create_declare_expression($2, REG64);
       printf("data64_declare\n");
   }
-  | REG_DATA16R IDENT
+  | REG_DATA16B IDENT
   {
-      $$ = ktu_create_declare_expression($2, REG16R);
+      $$ = ktu_create_declare_expression($2, REG16B);
       printf("data16r_declare\n"); 
   }
-  | REG_DATA32R IDENT
+  | REG_DATA32B IDENT
   {
-      $$ = ktu_create_declare_expression($2, REG32R);
+      $$ = ktu_create_declare_expression($2, REG32B);
       printf("data32r_declare\n");
   }
-  | REG_DATA64R IDENT
+  | REG_DATA64B IDENT
   {
-      $$ = ktu_create_declare_expression($2, REG64R);
+      $$ = ktu_create_declare_expression($2, REG64B);
       printf("data64r_declare\n");
   }
   ;
@@ -346,20 +346,20 @@ struct_member_block_assign
     printf("*** member_block_assign ******\n");
     $$ = ktu_create_sturct_init_assign_expression($5, $2, REG64);
   }
-  | REG_DATA16R IDENT ASSIGN LC member_assign_list RC
+  | REG_DATA16B IDENT ASSIGN LC member_assign_list RC
   {
     printf("*** member_block_assign ******\n");
-    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG16R);
+    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG16B);
   }
-  | REG_DATA32R IDENT ASSIGN LC member_assign_list RC
+  | REG_DATA32B IDENT ASSIGN LC member_assign_list RC
   {
     printf("*** member_block_assign ******\n");
-    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG32R);
+    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG32B);
   }
-  | REG_DATA64R IDENT ASSIGN LC member_assign_list RC
+  | REG_DATA64B IDENT ASSIGN LC member_assign_list RC
   {
     printf("*** member_block_assign ******\n");
-    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG64R);
+    $$ = ktu_create_sturct_init_assign_expression($5, $2, REG64B);
   };
 
 member_assign_list

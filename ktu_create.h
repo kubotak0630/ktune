@@ -22,9 +22,9 @@ typedef enum {
     REG16  = 1,
     REG32  = (1 << 1),
 	REG64  = (1 << 2),
-	REG16R = (1 << 3),
-	REG32R = (1 << 4),
-	REG64R = (1 << 5),
+	REG16B = (1 << 3),
+	REG32B = (1 << 4),
+	REG64B = (1 << 5),
 } RegType;
 
 

@@ -93,7 +93,7 @@ static void change_widget_value(Varialbe_Dict* dict) {
 
 			set_reg32(pVal->u.regx.addr, eval_data, pVal->u.regx.misk);
 
-		} else if (pVal->u.regx.reg_type == REG32R) {
+		} else if (pVal->u.regx.reg_type == REG32B) {
 
 
 			int32_t eval_data = eval_expression(pVal->u.regx.data_expr).u.long_val;
@@ -111,7 +111,7 @@ static void change_widget_value(Varialbe_Dict* dict) {
 
 			set_reg64(pVal->u.regx.addr, eval_data, pVal->u.regx.misk);
 
-		} else if (pVal->u.regx.reg_type == REG64R) {
+		} else if (pVal->u.regx.reg_type == REG64B) {
 
 			uint64_t eval_data = eval_expression(pVal->u.regx.data_expr).u.long_val;
 
@@ -291,11 +291,11 @@ static void cb_radio_button_toggle(GtkWidget* widget, gpointer user_data) {
 
 static void set_register(uint32_t addr, uint64_t data, int32_t misk, RegType reg_type) {
 
-	if (reg_type & (REG32 | REG32R)) {
+	if (reg_type & (REG32 | REG32B)) {
 		set_reg32(addr, data, misk);
-	} else if (reg_type & (REG64 | REG64R)) {
+	} else if (reg_type & (REG64 | REG64B)) {
 		set_reg64(addr, data, misk);
-	} else if (reg_type & (REG16 | REG16R)) {
+	} else if (reg_type & (REG16 | REG16B)) {
 		set_reg16(addr, data, misk);
 	}
 }
@@ -360,13 +360,13 @@ GtkWidget* create_regx(Varialbe_Dict* val_dict, GtkWidget* vbox_top) {
 
 	//テキストを作成
 	//printf("%d\n", val_dict->val.u.regx.reg_type);
-	if (val_dict->val.u.regx.reg_type & (REG16 | REG16R)) {
+	if (val_dict->val.u.regx.reg_type & (REG16 | REG16B)) {
 		sprintf(str_temp, "reg16@0x%08X = ", val_dict->val.u.regx.addr);
 	}
-	else if (val_dict->val.u.regx.reg_type & (REG32 | REG32R)) {
+	else if (val_dict->val.u.regx.reg_type & (REG32 | REG32B)) {
 		sprintf(str_temp, "reg32@0x%08X = ", val_dict->val.u.regx.addr);
 	}
-	else if (val_dict->val.u.regx.reg_type & (REG64 | REG64R)) {
+	else if (val_dict->val.u.regx.reg_type & (REG64 | REG64B)) {
 		sprintf(str_temp, "reg64@0x%08X = ", val_dict->val.u.regx.addr);
 	}
 
@@ -377,7 +377,7 @@ GtkWidget* create_regx(Varialbe_Dict* val_dict, GtkWidget* vbox_top) {
 		val_dict->val.u.regx.p_gtk_button = NULL;
 	}
 	//ボタンを作成
-	else if (val_dict->val.u.regx.reg_type & (REG16R | REG32R | REG64R)) {
+	else if (val_dict->val.u.regx.reg_type & (REG16B | REG32B | REG64B)) {
 
 		label_addr = gtk_button_new_with_label(str_temp);
 		val_dict->val.u.regx.p_gtk_button = label_addr;
@@ -394,12 +394,12 @@ GtkWidget* create_regx(Varialbe_Dict* val_dict, GtkWidget* vbox_top) {
 
 	//データ表示
 	char str_temp_l[128];
-	if (val_dict->val.u.regx.reg_type & (REG32 | REG32R)) {
+	if (val_dict->val.u.regx.reg_type & (REG32 | REG32B)) {
 		int32_t eval_data = eval_expression(val_dict->val.u.regx.data_expr).u.long_val;
 		val_dict->val.u.regx.data_buf = eval_data;
 		sprintf(str_temp, "0x%08X", eval_data);
 	}
-	else if (val_dict->val.u.regx.reg_type & (REG64 | REG64R)) {
+	else if (val_dict->val.u.regx.reg_type & (REG64 | REG64B)) {
 		uint64_t eval_data = eval_expression(val_dict->val.u.regx.data_expr).u.long_val;
 		sprintf(str_temp, "0x%08X_", (uint32_t)(eval_data >> 32));
 		sprintf(str_temp_l, "%08X", (uint32_t)(eval_data & 0xFFFFFFFF));

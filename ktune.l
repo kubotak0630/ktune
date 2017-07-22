@@ -45,9 +45,9 @@ int yywrap(void)
 <INITIAL>"$data16"  return REG_DATA16;
 <INITIAL>"$data32"  return REG_DATA32;
 <INITIAL>"$data64"  return REG_DATA64;
-<INITIAL>"$data16r"  return REG_DATA16R;
-<INITIAL>"$data32r"  return REG_DATA32R;
-<INITIAL>"$data64r"  return REG_DATA64R;
+<INITIAL>"$data16b"  return REG_DATA16B;
+<INITIAL>"$data32b"  return REG_DATA32B;
+<INITIAL>"$data64b"  return REG_DATA64B;
 <INITIAL>"$page"     return GTK_PAGE;
 
 
