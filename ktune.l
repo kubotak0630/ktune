@@ -38,9 +38,12 @@ int yywrap(void)
 <INITIAL>"["     return LBR;
 <INITIAL>"]"     return RBR;
 <INITIAL>","     return COMMA;
+<INITIAL>^[ \t]*"\n" {
+   increment_line_number();
+}  //ingnore blank line
 <INITIAL>"\n" {
-	increment_line_number();
-	//return CR;
+   increment_line_number();
+   return EOL;
 }
 <INITIAL>"$data16"  return REG_DATA16;
 <INITIAL>"$data32"  return REG_DATA32;
@@ -102,13 +105,22 @@ int yywrap(void)
 
 
 <INITIAL>\/\* {
-	printf("***** start block_comment\n");
+	//printf("***** start block_comment\n");
 	BEGIN BLOCK_COMMENT;
 }
 <BLOCK_COMMENT>. ;
-<BLOCK_COMMENT>\n {increment_line_number();};
+<BLOCK_COMMENT>\n {
+  increment_line_number();
+  //printf("find CR in Block_comment\n");
+};
+   /** 終わりがスペース、タブ、改行で終る時 **/
+<BLOCK_COMMENT>\*\/[ \t]*\n {
+	//printf("***** end block_comment\n");
+	BEGIN INITIAL;
+}
+
 <BLOCK_COMMENT>\*\/ {
-	printf("***** end block_comment\n");
+	//printf("***** end block_comment\n");
 	BEGIN INITIAL;
 }
 
@@ -119,6 +131,6 @@ int yywrap(void)
   exit(1);
   }
   
-  
+
 
 %%
