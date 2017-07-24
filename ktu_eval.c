@@ -236,7 +236,7 @@ int eval_scale_widet_assign_expression(Expression* expr)
 	widgetData.val = widgetData.def; //ここではvalの値はdefをいれておく
 
 
-	if (widgetData.min == 0 && widgetData.max == 1) {
+	if (widgetData.min == 0 && widgetData.max == 1 && expr->u.scale_widget_assign_expr.auto_flg == 0) {
 		widgetData.type = BUTTON_WIDGET;
 	}
 	else {

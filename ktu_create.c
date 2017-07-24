@@ -251,7 +251,7 @@ Expression* ktu_create_declare_expression(char* str, RegType type)
 
 
 //scale widgetの代入, val = [min, max, def, shift]
-Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4)
+Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4, int auto_flg)
 {
 	Expression* expr;
 	expr = ktu_alloc_expression(SCALE_WIDGET_ASSIGN_EXPRESSION);
@@ -261,6 +261,7 @@ Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expressi
 	expr->u.scale_widget_assign_expr.expr_max = a2;
 	expr->u.scale_widget_assign_expr.expr_def = a3;
 	expr->u.scale_widget_assign_expr.expr_shift = a4;
+	expr->u.scale_widget_assign_expr.auto_flg = auto_flg;
 
 
 	return expr;

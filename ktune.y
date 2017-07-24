@@ -4,6 +4,8 @@
 #include "ktu_create.h"
 #define YYDEBUG 1
 
+extern int g_line_number;
+
 //temp
 extern StatementList* g_st_list;
 
@@ -23,7 +25,7 @@ extern StatementList* g_st_list;
 %token <ident> STRING_LITERAL
 %token <ident> IDENT IDENT_MEMBER MEMBER
 %token IF ELSE ELSIF ADD SUB MUL DIV LP RP LC RC ASSIGN EQ BIT_AND BIT_OR BIT_L_SHIFT BIT_R_SHIFT EOL
-%token C_LBR R_LBR SPIN_LBR LBR RBR COMMA
+%token C_LBR R_LBR SPIN_LBR SCALE_LBR SCALE_AUTO_LBR RBR COMMA
 %token REG_DATA16 REG_DATA32 REG_DATA64 REG_DATA16B REG_DATA32B REG_DATA64B GTK_PAGE
 %type <expr> calc_expr expression primary register_declare  page_create member_assign struct_member_block_assign
 %type <expr> widget_scalse_assign widget_combo_assign widget_radio_assign widget_spin_assign
@@ -293,9 +295,14 @@ register_declare
 
 //val = [expr, expr, expr, expr]
 widget_scalse_assign
-  : IDENT ASSIGN LBR calc_expr COMMA calc_expr COMMA calc_expr COMMA calc_expr RBR
+  : IDENT ASSIGN SCALE_LBR calc_expr COMMA calc_expr COMMA calc_expr COMMA calc_expr RBR
   {
-  	  $$ = ktu_create_assign_scale_widget($1, $4, $6, $8, $10);
+  	  $$ = ktu_create_assign_scale_widget($1, $4, $6, $8, $10, 1);
+  }
+  |
+  IDENT ASSIGN SCALE_AUTO_LBR calc_expr COMMA calc_expr COMMA calc_expr COMMA calc_expr RBR
+  {
+  	  $$ = ktu_create_assign_scale_widget($1, $4, $6, $8, $10, 0);
   }
   ;
 
@@ -399,23 +406,9 @@ member_assign
 int yyerror(char const *str)
 {
     extern char *yytext;
-    
-    StatementList* pos;
-
-    //リストの末尾を探す
-    pos = g_st_list;
-    if (pos != NULL) {
-    	while (pos->next != NULL) {
-    		pos = pos->next;
-    	}
-    }
-   
-    
-    int error_line = (pos == NULL) ? 1 : pos->statement->line_number;
-    
+  
    	 
-    
-    fprintf(stderr, "line :%d, parser error near %s\n", error_line, yytext);
+    fprintf(stderr, "line :%d, parser error near %s\n", g_line_number, yytext);
     return 0;
 }
 

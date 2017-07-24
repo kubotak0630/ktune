@@ -138,6 +138,7 @@ typedef struct {
 
 
 typedef struct {
+	int auto_flg;   //sc[,,,], scale[,,,] 時は1、min=0, max=1でもボタンにしない
 	char *str_name;
 	struct Expression_tag *expr_min;
 	struct Expression_tag *expr_max;
@@ -256,7 +257,7 @@ Expression* ktu_create_assign_expression(char* variable, Expression* operand, in
 Expression* ktu_create_identifier_expression(char* str);
 Expression* ktu_create_minus_expression(Expression* operand);
 Expression* ktu_create_declare_expression(char* str, RegType type);
-Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
+Expression* ktu_create_assign_scale_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4, int auto_flg);
 Expression* ktu_create_assign_spin_widget(char* ident, Expression* a1, Expression* a2, Expression* a3, Expression* a4);
 Expression* ktu_create_assign_enum_widget(ExprList* expr_list ,char* ident, widgetType type);
 Expression* ktu_create_sturct_init_assign_expression(ExprList* expr_list, char* ident, RegType reg_type);

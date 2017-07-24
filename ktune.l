@@ -32,10 +32,11 @@ int yywrap(void)
 <INITIAL>"}"     return RC;
 <INITIAL>"="     return ASSIGN;
 <INITIAL>"=="    return EQ;
-<INITIAL>"c["    return C_LBR;  //combo widget
-<INITIAL>"r["    return R_LBR;  //radio widget
-<INITIAL>"spin[" return SPIN_LBR;
-<INITIAL>"["     return LBR;
+<INITIAL>"combo["|"c["    return C_LBR;  //combo widget
+<INITIAL>"radio["|"r["    return R_LBR;  //radio widget
+<INITIAL>"spin["|"sp[" return SPIN_LBR;  //spin widget
+<INITIAL>"["    return SCALE_AUTO_LBR;  //scale widget
+<INITIAL>"sc["|"scale["    return SCALE_LBR;  //scale widget
 <INITIAL>"]"     return RBR;
 <INITIAL>","     return COMMA;
 <INITIAL>^[ \t]*"\n" {
