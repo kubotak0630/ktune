@@ -26,7 +26,7 @@ val_3 = r["str00", "str11" "str22", 1]     #ラジオボタン型widget 0,1,2の
 
 上記スクリプトから↓のGUIが簡単に生成可能！
 
-![基本図](./ktune_pict_0.jpg "基本図")
+![GUI図](./manual/ktune_pict_0.jpg "GUI図")
 
 ---
 ## Ktuneとデバイスとの接続方法
